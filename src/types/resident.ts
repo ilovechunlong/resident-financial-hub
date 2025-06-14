@@ -17,7 +17,6 @@ export interface Resident {
   care_level: 'independent' | 'assisted_living' | 'memory_care' | 'skilled_nursing';
   admission_date: string;
   room_number?: string;
-  monthly_fee: number;
   insurance_provider?: string;
   insurance_policy_number?: string;
   notes?: string;
@@ -43,7 +42,6 @@ export interface ResidentFormData {
   care_level: 'independent' | 'assisted_living' | 'memory_care' | 'skilled_nursing';
   admission_date: string;
   room_number?: string;
-  monthly_fee: number;
   insurance_provider?: string;
   insurance_policy_number?: string;
   notes?: string;
