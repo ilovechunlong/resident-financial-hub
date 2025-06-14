@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import NursingHomes from "./pages/NursingHomes";
 import Residents from "./pages/Residents";
+import Finances from "./pages/Finances";
 
 const queryClient = new QueryClient();
 
@@ -36,10 +37,7 @@ const App = () => (
           } />
           <Route path="/finances" element={
             <DashboardLayout>
-              <div className="text-center py-12">
-                <h1 className="text-2xl font-bold mb-4">Financial Tracking</h1>
-                <p className="text-muted-foreground">Track income and expenses for residents and facilities.</p>
-              </div>
+              <Finances />
             </DashboardLayout>
           } />
           <Route path="/reports" element={
