@@ -1,11 +1,9 @@
 
-import { useState } from 'react';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { useIncomeTypeCategoryMapping } from '@/hooks/useIncomeTypeCategoryMapping';
+import { formatIncomeTypes, formatIncomeTypeLabel } from './financial/IncomeTypeFormatter';
+import { IncomeTypesGrid } from './financial/IncomeTypesGrid';
+import { CustomIncomeTypeForm } from './financial/CustomIncomeTypeForm';
+import { SelectedIncomeTypes } from './financial/SelectedIncomeTypes';
 
 interface FinancialProfileStepProps {
   formData: any;
@@ -13,74 +11,10 @@ interface FinancialProfileStepProps {
 }
 
 export function FinancialProfileStep({ formData, updateFormData }: FinancialProfileStepProps) {
-  const [customIncomeType, setCustomIncomeType] = useState('');
   const { data: incomeTypeMappings = [], isLoading } = useIncomeTypeCategoryMapping();
 
-  // Get unique income types from the database
-  const incomeTypes = Array.from(
-    new Set(incomeTypeMappings.map(mapping => mapping.income_type))
-  ).map(incomeType => {
-    // Create a display-friendly label
-    const formatLabel = (type: string) => {
-      switch (type) {
-        case 'ssi':
-          return 'SSI (Supplemental Security Income)';
-        case 'ssdi':
-          return 'SSDI (Social Security Disability Insurance)';
-        case 'medicaid':
-          return 'Medicaid';
-        case 'medicare':
-          return 'Medicare';
-        case 'private_insurance':
-          return 'Private Insurance';
-        case 'private_pay':
-          return 'Private Pay';
-        case 'grant':
-          return 'Grant';
-        case 'waiver':
-          return 'Waiver';
-        case 'veteran_benefits':
-          return 'Veteran Benefits';
-        case 'other':
-          return 'Other';
-        default:
-          return type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-      }
-    };
-
-    const getDescription = (type: string) => {
-      switch (type) {
-        case 'ssi':
-          return 'Federal income supplement program';
-        case 'ssdi':
-          return 'Federal insurance program';
-        case 'medicaid':
-          return 'Government health insurance';
-        case 'medicare':
-          return 'Federal health insurance';
-        case 'private_insurance':
-          return 'Private health insurance';
-        case 'private_pay':
-          return 'Private payment';
-        case 'grant':
-          return 'Government or private grants';
-        case 'waiver':
-          return 'Medicaid waiver programs';
-        case 'veteran_benefits':
-          return 'VA benefits and support';
-        case 'other':
-          return 'Other income sources';
-        default:
-          return 'Additional income source';
-      }
-    };
-
-    return {
-      id: incomeType,
-      label: formatLabel(incomeType),
-      description: getDescription(incomeType)
-    };
-  });
+  // Get formatted income types from the database
+  const incomeTypes = formatIncomeTypes(incomeTypeMappings);
 
   const handleIncomeTypeChange = (incomeTypeId: string, checked: boolean) => {
     const currentTypes = formData.income_types || [];
@@ -95,17 +29,14 @@ export function FinancialProfileStep({ formData, updateFormData }: FinancialProf
     updateFormData({ income_types: updatedTypes });
   };
 
-  const addCustomIncomeType = () => {
-    if (customIncomeType.trim()) {
-      const currentTypes = formData.income_types || [];
-      const customId = `custom_${customIncomeType.toLowerCase().replace(/\s+/g, '_')}`;
-      
-      if (!currentTypes.includes(customId)) {
-        updateFormData({ 
-          income_types: [...currentTypes, customId] 
-        });
-      }
-      setCustomIncomeType('');
+  const addCustomIncomeType = (customIncomeType: string) => {
+    const currentTypes = formData.income_types || [];
+    const customId = `custom_${customIncomeType.toLowerCase().replace(/\s+/g, '_')}`;
+    
+    if (!currentTypes.includes(customId)) {
+      updateFormData({ 
+        income_types: [...currentTypes, customId] 
+      });
     }
   };
 
@@ -149,92 +80,19 @@ export function FinancialProfileStep({ formData, updateFormData }: FinancialProf
       </div>
 
       <div className="space-y-6">
-        <div>
-          <Label className="text-base font-medium mb-4 block">Income Types *</Label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {incomeTypes.map((incomeType) => (
-              <Card key={incomeType.id} className="cursor-pointer hover:bg-gray-50 transition-colors">
-                <CardContent className="p-4">
-                  <div className="flex items-start space-x-3">
-                    <Checkbox
-                      id={incomeType.id}
-                      checked={formData.income_types?.includes(incomeType.id) || false}
-                      onCheckedChange={(checked) => handleIncomeTypeChange(incomeType.id, checked as boolean)}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <label
-                        htmlFor={incomeType.id}
-                        className="text-sm font-medium text-gray-900 cursor-pointer block"
-                      >
-                        {incomeType.label}
-                      </label>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {incomeType.description}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
+        <IncomeTypesGrid
+          incomeTypes={incomeTypes}
+          selectedTypes={formData.income_types || []}
+          onSelectionChange={handleIncomeTypeChange}
+        />
 
-        {/* Custom Income Type */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Add Custom Income Type</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Enter custom income type"
-                value={customIncomeType}
-                onChange={(e) => setCustomIncomeType(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    addCustomIncomeType();
-                  }
-                }}
-              />
-              <button
-                type="button"
-                onClick={addCustomIncomeType}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                disabled={!customIncomeType.trim()}
-              >
-                Add
-              </button>
-            </div>
-          </CardContent>
-        </Card>
+        <CustomIncomeTypeForm onAddCustomType={addCustomIncomeType} />
 
-        {/* Selected Income Types */}
-        {formData.income_types && formData.income_types.length > 0 && (
-          <div>
-            <Label className="text-base font-medium mb-3 block">Selected Income Types</Label>
-            <div className="flex flex-wrap gap-2">
-              {formData.income_types.map((typeId: string) => (
-                <Badge
-                  key={typeId}
-                  variant="secondary"
-                  className="flex items-center gap-2 px-3 py-1"
-                >
-                  {getDisplayName(typeId)}
-                  {typeId.startsWith('custom_') && (
-                    <button
-                      onClick={() => removeCustomIncomeType(typeId)}
-                      className="text-red-500 hover:text-red-700 ml-1"
-                      type="button"
-                    >
-                      ×
-                    </button>
-                  )}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
+        <SelectedIncomeTypes
+          selectedTypes={formData.income_types || []}
+          getDisplayName={getDisplayName}
+          onRemoveCustomType={removeCustomIncomeType}
+        />
       </div>
 
       {formData.income_types && formData.income_types.length === 0 && (
