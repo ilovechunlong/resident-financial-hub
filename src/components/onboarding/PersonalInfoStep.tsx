@@ -101,14 +101,13 @@ export function PersonalInfoStep({ formData, updateFormData }: PersonalInfoStepP
         </div>
 
         <div>
-          <Label htmlFor="social_security_number">Social Security Number *</Label>
+          <Label htmlFor="social_security_number">Social Security Number</Label>
           <Input
             id="social_security_number"
             type="password"
             value={formData.social_security_number}
             onChange={(e) => updateFormData({ social_security_number: e.target.value })}
             placeholder="XXX-XX-XXXX"
-            required
           />
           <p className="text-xs text-gray-500 mt-1">
             This information is encrypted and securely stored.

@@ -63,12 +63,12 @@ export function ResidentOnboardingForm({ onSubmit, onCancel, preSelectedNursingH
 
   const validateStep = (stepIndex: number): boolean => {
     switch (stepIndex) {
-      case 0: // Personal Info
-        return !!(formData.first_name && formData.last_name && formData.date_of_birth && formData.social_security_number);
-      case 1: // Emergency Contact
-        return !!(formData.emergency_contact_name && formData.emergency_contact_phone && formData.emergency_contact_relationship);
-      case 2: // Assignment
-        return !!formData.nursing_home_id;
+      case 0: // Personal Info - only first name, last name, and date of birth required
+        return !!(formData.first_name && formData.last_name && formData.date_of_birth);
+      case 1: // Emergency Contact - all fields are now optional
+        return true;
+      case 2: // Assignment - all fields are now optional
+        return true;
       case 3: // Financial Profile
         return formData.income_types && formData.income_types.length > 0;
       case 4: // Review

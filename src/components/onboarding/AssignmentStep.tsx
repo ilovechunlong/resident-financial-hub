@@ -19,13 +19,13 @@ export function AssignmentStep({ formData, updateFormData, nursingHomes }: Assig
       <div>
         <h3 className="text-lg font-semibold mb-4">Nursing Home Assignment</h3>
         <p className="text-sm text-gray-600 mb-6">
-          Select the nursing home where this resident will be placed and configure their care details.
+          Select the nursing home where this resident will be placed and configure their care details (optional - can be completed later).
         </p>
       </div>
 
       <div className="space-y-6">
         <div>
-          <Label htmlFor="nursing_home_id">Nursing Home *</Label>
+          <Label htmlFor="nursing_home_id">Nursing Home</Label>
           <Select
             value={formData.nursing_home_id}
             onValueChange={(value) => updateFormData({ nursing_home_id: value })}
@@ -76,7 +76,7 @@ export function AssignmentStep({ formData, updateFormData, nursingHomes }: Assig
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <Label htmlFor="care_level">Care Level *</Label>
+            <Label htmlFor="care_level">Care Level</Label>
             <Select
               value={formData.care_level}
               onValueChange={(value) => updateFormData({ care_level: value })}
@@ -94,7 +94,7 @@ export function AssignmentStep({ formData, updateFormData, nursingHomes }: Assig
           </div>
 
           <div>
-            <Label htmlFor="mobility_level">Mobility Level *</Label>
+            <Label htmlFor="mobility_level">Mobility Level</Label>
             <Select
               value={formData.mobility_level}
               onValueChange={(value) => updateFormData({ mobility_level: value })}
@@ -122,13 +122,12 @@ export function AssignmentStep({ formData, updateFormData, nursingHomes }: Assig
           </div>
 
           <div>
-            <Label htmlFor="admission_date">Admission Date *</Label>
+            <Label htmlFor="admission_date">Admission Date</Label>
             <Input
               id="admission_date"
               type="date"
               value={formData.admission_date}
               onChange={(e) => updateFormData({ admission_date: e.target.value })}
-              required
             />
           </div>
         </div>
