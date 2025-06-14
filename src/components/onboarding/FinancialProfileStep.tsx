@@ -5,24 +5,82 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useIncomeTypeCategoryMapping } from '@/hooks/useIncomeTypeCategoryMapping';
 
 interface FinancialProfileStepProps {
   formData: any;
   updateFormData: (updates: any) => void;
 }
 
-const incomeTypes = [
-  { id: 'ssi', label: 'SSI (Supplemental Security Income)', description: 'Federal income supplement program' },
-  { id: 'ssdi', label: 'SSDI (Social Security Disability Insurance)', description: 'Federal insurance program' },
-  { id: 'grant', label: 'Grant', description: 'Government or private grants' },
-  { id: 'waiver', label: 'Waiver', description: 'Medicaid waiver programs' },
-  { id: 'pension', label: 'Pension', description: 'Retirement pension benefits' },
-  { id: 'family_support', label: 'Family Support', description: 'Financial support from family' },
-  { id: 'other', label: 'Other', description: 'Other income sources' },
-];
-
 export function FinancialProfileStep({ formData, updateFormData }: FinancialProfileStepProps) {
   const [customIncomeType, setCustomIncomeType] = useState('');
+  const { data: incomeTypeMappings = [], isLoading } = useIncomeTypeCategoryMapping();
+
+  // Get unique income types from the database
+  const incomeTypes = Array.from(
+    new Set(incomeTypeMappings.map(mapping => mapping.income_type))
+  ).map(incomeType => {
+    // Create a display-friendly label
+    const formatLabel = (type: string) => {
+      switch (type) {
+        case 'ssi':
+          return 'SSI (Supplemental Security Income)';
+        case 'ssdi':
+          return 'SSDI (Social Security Disability Insurance)';
+        case 'medicaid':
+          return 'Medicaid';
+        case 'medicare':
+          return 'Medicare';
+        case 'private_insurance':
+          return 'Private Insurance';
+        case 'private_pay':
+          return 'Private Pay';
+        case 'grant':
+          return 'Grant';
+        case 'waiver':
+          return 'Waiver';
+        case 'veteran_benefits':
+          return 'Veteran Benefits';
+        case 'other':
+          return 'Other';
+        default:
+          return type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      }
+    };
+
+    const getDescription = (type: string) => {
+      switch (type) {
+        case 'ssi':
+          return 'Federal income supplement program';
+        case 'ssdi':
+          return 'Federal insurance program';
+        case 'medicaid':
+          return 'Government health insurance';
+        case 'medicare':
+          return 'Federal health insurance';
+        case 'private_insurance':
+          return 'Private health insurance';
+        case 'private_pay':
+          return 'Private payment';
+        case 'grant':
+          return 'Government or private grants';
+        case 'waiver':
+          return 'Medicaid waiver programs';
+        case 'veteran_benefits':
+          return 'VA benefits and support';
+        case 'other':
+          return 'Other income sources';
+        default:
+          return 'Additional income source';
+      }
+    };
+
+    return {
+      id: incomeType,
+      label: formatLabel(incomeType),
+      description: getDescription(incomeType)
+    };
+  });
 
   const handleIncomeTypeChange = (incomeTypeId: string, checked: boolean) => {
     const currentTypes = formData.income_types || [];
@@ -69,6 +127,17 @@ export function FinancialProfileStep({ formData, updateFormData }: FinancialProf
     
     return typeId;
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-lg font-semibold mb-4">Financial Profile</h3>
+          <p className="text-sm text-gray-600 mb-6">Loading income types...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
