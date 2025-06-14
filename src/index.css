@@ -9,48 +9,6 @@
 
 @layer base {
   :root {
-    /* Dark mode colors by default */
-    --background: 15 23 42;
-    --foreground: 248 250 252;
-
-    --card: 30 41 59;
-    --card-foreground: 248 250 252;
-
-    --popover: 30 41 59;
-    --popover-foreground: 248 250 252;
-
-    --primary: 139 92 246;
-    --primary-foreground: 255 255 255;
-
-    --secondary: 51 65 85;
-    --secondary-foreground: 248 250 252;
-
-    --muted: 51 65 85;
-    --muted-foreground: 148 163 184;
-
-    --accent: 13 148 136;
-    --accent-foreground: 255 255 255;
-
-    --destructive: 239 68 68;
-    --destructive-foreground: 255 255 255;
-
-    --border: 51 65 85;
-    --input: 51 65 85;
-    --ring: 139 92 246;
-
-    --radius: 0.75rem;
-
-    --sidebar-background: 30 41 59;
-    --sidebar-foreground: 248 250 252;
-    --sidebar-primary: 139 92 246;
-    --sidebar-primary-foreground: 255 255 255;
-    --sidebar-accent: 51 65 85;
-    --sidebar-accent-foreground: 248 250 252;
-    --sidebar-border: 51 65 85;
-    --sidebar-ring: 139 92 246;
-  }
-
-  .light {
     --background: 248 250 252;
     --foreground: 30 41 59;
 
@@ -78,7 +36,9 @@
     --border: 226 232 240;
     --input: 226 232 240;
     --ring: 139 92 246;
-    
+
+    --radius: 0.75rem;
+
     --sidebar-background: 255 255 255;
     --sidebar-foreground: 30 41 59;
     --sidebar-primary: 139 92 246;
@@ -86,6 +46,45 @@
     --sidebar-accent: 248 250 252;
     --sidebar-accent-foreground: 30 41 59;
     --sidebar-border: 226 232 240;
+    --sidebar-ring: 139 92 246;
+  }
+
+  .dark {
+    --background: 15 23 42;
+    --foreground: 248 250 252;
+
+    --card: 30 41 59;
+    --card-foreground: 248 250 252;
+
+    --popover: 30 41 59;
+    --popover-foreground: 248 250 252;
+
+    --primary: 139 92 246;
+    --primary-foreground: 255 255 255;
+
+    --secondary: 51 65 85;
+    --secondary-foreground: 248 250 252;
+
+    --muted: 51 65 85;
+    --muted-foreground: 148 163 184;
+
+    --accent: 13 148 136;
+    --accent-foreground: 255 255 255;
+
+    --destructive: 239 68 68;
+    --destructive-foreground: 255 255 255;
+
+    --border: 51 65 85;
+    --input: 51 65 85;
+    --ring: 139 92 246;
+    
+    --sidebar-background: 30 41 59;
+    --sidebar-foreground: 248 250 252;
+    --sidebar-primary: 139 92 246;
+    --sidebar-primary-foreground: 255 255 255;
+    --sidebar-accent: 51 65 85;
+    --sidebar-accent-foreground: 248 250 252;
+    --sidebar-border: 51 65 85;
     --sidebar-ring: 139 92 246;
   }
 }
@@ -100,11 +99,11 @@
   }
 }
 
-/* Custom gradient backgrounds - adjusted for dark theme */
+/* Custom gradient backgrounds */
 .gradient-bg {
   background: linear-gradient(135deg, theme('colors.healthcare.primary') 0%, theme('colors.healthcare.secondary') 100%);
 }
 
 .gradient-card {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(13, 148, 136, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(13, 148, 136, 0.05) 100%);
 }
