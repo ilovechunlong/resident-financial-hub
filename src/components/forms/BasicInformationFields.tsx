@@ -3,24 +3,42 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { ResidentFormData } from '@/types/resident';
-import { NursingHome } from '@/types/nursingHome';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 interface BasicInformationFieldsProps {
   formData: ResidentFormData;
   setFormData: React.Dispatch<React.SetStateAction<ResidentFormData>>;
-  nursingHomes: NursingHome[];
+  nursingHomes: any[];
 }
 
 export function BasicInformationFields({ formData, setFormData, nursingHomes }: BasicInformationFieldsProps) {
+  if (!nursingHomes || nursingHomes.length === 0) {
+    return (
+      <div>
+        <h3 className="text-lg font-semibold mb-4">Basic Information</h3>
+        <Alert className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            No nursing homes are available. Please add a nursing home first before creating a resident.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   return (
     <div>
       <h3 className="text-lg font-semibold mb-4">Basic Information</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="nursing_home_id">Nursing Home *</Label>
-          <Select value={formData.nursing_home_id} onValueChange={(value) => setFormData(prev => ({ ...prev, nursing_home_id: value }))}>
+          <Label htmlFor="nursing_home_id">Facility *</Label>
+          <Select 
+            value={formData.nursing_home_id} 
+            onValueChange={(value) => setFormData(prev => ({ ...prev, nursing_home_id: value }))}
+          >
             <SelectTrigger>
-              <SelectValue placeholder="Select nursing home" />
+              <SelectValue placeholder="Select a facility" />
             </SelectTrigger>
             <SelectContent>
               {nursingHomes.map((home) => (

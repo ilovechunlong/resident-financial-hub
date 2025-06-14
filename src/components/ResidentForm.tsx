@@ -61,8 +61,26 @@ export function ResidentForm({ resident, onSubmit, onCancel }: ResidentFormProps
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate that a nursing home is selected
+    if (!formData.nursing_home_id) {
+      console.error('Nursing home must be selected');
+      return;
+    }
+
+    // Validate required fields
+    if (!formData.first_name || !formData.last_name || !formData.date_of_birth || 
+        !formData.emergency_contact_name || !formData.emergency_contact_phone || 
+        !formData.emergency_contact_relationship || !formData.admission_date) {
+      console.error('Required fields are missing');
+      return;
+    }
+
     onSubmit(formData);
   };
+
+  // Don't allow form submission if no nursing homes are available
+  const canSubmit = nursingHomes && nursingHomes.length > 0 && formData.nursing_home_id;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -72,29 +90,33 @@ export function ResidentForm({ resident, onSubmit, onCancel }: ResidentFormProps
         nursingHomes={nursingHomes} 
       />
 
-      <Separator />
+      {nursingHomes && nursingHomes.length > 0 && (
+        <>
+          <Separator />
 
-      <EmergencyContactFields 
-        formData={formData} 
-        setFormData={setFormData} 
-      />
+          <EmergencyContactFields 
+            formData={formData} 
+            setFormData={setFormData} 
+          />
 
-      <Separator />
+          <Separator />
 
-      <CareInformationFields 
-        formData={formData} 
-        setFormData={setFormData} 
-      />
+          <CareInformationFields 
+            formData={formData} 
+            setFormData={setFormData} 
+          />
 
-      <Separator />
+          <Separator />
 
-      <AdditionalInformationFields 
-        formData={formData} 
-        setFormData={setFormData} 
-      />
+          <AdditionalInformationFields 
+            formData={formData} 
+            setFormData={setFormData} 
+          />
+        </>
+      )}
 
       <div className="flex gap-4 pt-4">
-        <Button type="submit" className="flex-1">
+        <Button type="submit" className="flex-1" disabled={!canSubmit}>
           {resident ? 'Update Resident' : 'Add Resident'}
         </Button>
         <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
