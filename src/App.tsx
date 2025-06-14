@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { DashboardLayout } from "./components/DashboardLayout";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
+import NursingHomes from "./pages/NursingHomes";
 
 const queryClient = new QueryClient();
 
@@ -24,10 +24,7 @@ const App = () => (
           } />
           <Route path="/nursing-homes" element={
             <DashboardLayout>
-              <div className="text-center py-12">
-                <h1 className="text-2xl font-bold mb-4">Nursing Homes</h1>
-                <p className="text-muted-foreground">Manage your care facilities here.</p>
-              </div>
+              <NursingHomes />
             </DashboardLayout>
           } />
           <Route path="/residents" element={
