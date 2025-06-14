@@ -62,7 +62,7 @@ export function AppSidebar() {
   const location = useLocation()
 
   return (
-    <Sidebar className="border-r border-sidebar-border">
+    <Sidebar className="border-r border-sidebar-border bg-sidebar">
       <SidebarContent className="bg-sidebar">
         {/* Logo/Header */}
         <div className="p-6 border-b border-sidebar-border bg-gradient-to-r from-healthcare-primary to-healthcare-secondary text-white">
@@ -84,7 +84,7 @@ export function AppSidebar() {
                     className={`w-full justify-start rounded-lg transition-all duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${
                       location.pathname === item.url 
                         ? 'bg-healthcare-primary text-white shadow-sm' 
-                        : 'text-sidebar-foreground'
+                        : 'text-sidebar-foreground hover:bg-muted'
                     }`}
                   >
                     <Link to={item.url} className="flex items-center gap-3 p-3">

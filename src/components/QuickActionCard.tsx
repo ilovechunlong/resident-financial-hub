@@ -22,7 +22,7 @@ export function QuickActionCard({
   className 
 }: QuickActionCardProps) {
   return (
-    <Card className={`group relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-border/50 ${className}`}>
+    <Card className={`group relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-border/50 bg-card ${className}`}>
       <div className="absolute inset-0 bg-gradient-to-br from-healthcare-primary/10 via-transparent to-healthcare-secondary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       <CardHeader className="relative">
         <div className="flex items-center space-x-3">
@@ -30,7 +30,7 @@ export function QuickActionCard({
             <Icon className="h-6 w-6 text-healthcare-primary" />
           </div>
           <div>
-            <CardTitle className="text-lg font-semibold">{title}</CardTitle>
+            <CardTitle className="text-lg font-semibold text-card-foreground">{title}</CardTitle>
             <CardDescription className="text-sm text-muted-foreground mt-1">
               {description}
             </CardDescription>
@@ -38,7 +38,7 @@ export function QuickActionCard({
         </div>
       </CardHeader>
       <CardContent className="relative pt-0">
-        <Button asChild className="w-full bg-healthcare-primary hover:bg-healthcare-primary/90">
+        <Button asChild className="w-full bg-healthcare-primary hover:bg-healthcare-primary/90 text-white">
           <Link to={href}>{buttonText}</Link>
         </Button>
       </CardContent>

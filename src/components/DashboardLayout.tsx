@@ -14,7 +14,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <main className="flex-1 flex flex-col">
           <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="flex h-16 items-center px-6">
-              <SidebarTrigger className="mr-4" />
+              <SidebarTrigger className="mr-4 text-foreground hover:bg-muted" />
               <div className="flex flex-1 items-center justify-between">
                 <div>
                   <h1 className="text-2xl font-bold text-foreground">Care Home Management</h1>
@@ -28,7 +28,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </div>
             </div>
           </header>
-          <div className="flex-1 p-6">
+          <div className="flex-1 p-6 bg-background">
             {children}
           </div>
         </main>
