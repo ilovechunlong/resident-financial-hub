@@ -245,18 +245,13 @@ export type Database = {
           care_level: string
           created_at: string
           date_of_birth: string
-          dietary_restrictions: string[] | null
           emergency_contact_name: string
           emergency_contact_phone: string
           emergency_contact_relationship: string
           first_name: string
           gender: string
           id: string
-          insurance_policy_number: string | null
-          insurance_provider: string | null
           last_name: string
-          medical_conditions: string[] | null
-          medications: string[] | null
           mobility_level: string
           notes: string | null
           nursing_home_id: string
@@ -270,18 +265,13 @@ export type Database = {
           care_level: string
           created_at?: string
           date_of_birth: string
-          dietary_restrictions?: string[] | null
           emergency_contact_name: string
           emergency_contact_phone: string
           emergency_contact_relationship: string
           first_name: string
           gender: string
           id?: string
-          insurance_policy_number?: string | null
-          insurance_provider?: string | null
           last_name: string
-          medical_conditions?: string[] | null
-          medications?: string[] | null
           mobility_level: string
           notes?: string | null
           nursing_home_id: string
@@ -295,18 +285,13 @@ export type Database = {
           care_level?: string
           created_at?: string
           date_of_birth?: string
-          dietary_restrictions?: string[] | null
           emergency_contact_name?: string
           emergency_contact_phone?: string
           emergency_contact_relationship?: string
           first_name?: string
           gender?: string
           id?: string
-          insurance_policy_number?: string | null
-          insurance_provider?: string | null
           last_name?: string
-          medical_conditions?: string[] | null
-          medications?: string[] | null
           mobility_level?: string
           notes?: string | null
           nursing_home_id?: string

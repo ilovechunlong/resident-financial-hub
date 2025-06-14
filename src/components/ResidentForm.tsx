@@ -36,7 +36,6 @@ export function ResidentForm({ resident, onSubmit, onCancel }: ResidentFormProps
     care_level: 'independent',
     admission_date: '',
     room_number: '',
-    monthly_fee: 0,
     insurance_provider: '',
     insurance_policy_number: '',
     notes: '',
@@ -66,7 +65,6 @@ export function ResidentForm({ resident, onSubmit, onCancel }: ResidentFormProps
         care_level: resident.care_level || 'independent',
         admission_date: resident.admission_date || '',
         room_number: resident.room_number || '',
-        monthly_fee: resident.monthly_fee || 0,
         insurance_provider: resident.insurance_provider || '',
         insurance_policy_number: resident.insurance_policy_number || '',
         notes: resident.notes || '',
@@ -342,21 +340,10 @@ export function ResidentForm({ resident, onSubmit, onCancel }: ResidentFormProps
 
       <Separator />
 
-      {/* Financial Information */}
+      {/* Insurance Information */}
       <div>
-        <h3 className="text-lg font-semibold mb-4">Financial Information</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <Label htmlFor="monthly_fee">Monthly Fee *</Label>
-            <Input
-              id="monthly_fee"
-              type="number"
-              step="0.01"
-              value={formData.monthly_fee}
-              onChange={(e) => setFormData(prev => ({ ...prev, monthly_fee: parseFloat(e.target.value) || 0 }))}
-              required
-            />
-          </div>
+        <h3 className="text-lg font-semibold mb-4">Insurance Information</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="insurance_provider">Insurance Provider</Label>
             <Input
