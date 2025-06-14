@@ -55,12 +55,38 @@ export const getIncomeTypeDescription = (type: string): string => {
   }
 };
 
+// Fallback income types if database is empty
+const defaultIncomeTypes = [
+  'ssi',
+  'ssdi', 
+  'medicaid',
+  'medicare',
+  'private_insurance',
+  'private_pay',
+  'grant',
+  'waiver',
+  'veteran_benefits',
+  'other'
+];
+
 export const formatIncomeTypes = (incomeTypeMappings: IncomeTypeCategoryMapping[]) => {
-  console.log('Raw income type mappings:', incomeTypeMappings);
+  console.log('=== IncomeTypeFormatter Debug ===');
+  console.log('Raw income type mappings received:', incomeTypeMappings);
+  console.log('Mappings array length:', incomeTypeMappings?.length || 0);
+  console.log('Mappings is array:', Array.isArray(incomeTypeMappings));
   
   if (!incomeTypeMappings || incomeTypeMappings.length === 0) {
-    console.log('No income type mappings found, returning empty array');
-    return [];
+    console.log('No income type mappings found, using default income types');
+    
+    // Use default income types when database is empty
+    const defaultTypes = defaultIncomeTypes.map(incomeType => ({
+      id: incomeType,
+      label: formatIncomeTypeLabel(incomeType),
+      description: getIncomeTypeDescription(incomeType)
+    }));
+    
+    console.log('Default income types generated:', defaultTypes);
+    return defaultTypes;
   }
   
   // Extract unique income types from the mappings
@@ -68,7 +94,7 @@ export const formatIncomeTypes = (incomeTypeMappings: IncomeTypeCategoryMapping[
     new Set(incomeTypeMappings.map(mapping => mapping.income_type))
   );
   
-  console.log('Unique income types:', uniqueIncomeTypes);
+  console.log('Unique income types from database:', uniqueIncomeTypes);
   
   // Format them for display
   const formattedTypes = uniqueIncomeTypes.map(incomeType => ({
@@ -77,7 +103,7 @@ export const formatIncomeTypes = (incomeTypeMappings: IncomeTypeCategoryMapping[
     description: getIncomeTypeDescription(incomeType)
   }));
   
-  console.log('Formatted income types:', formattedTypes);
+  console.log('Final formatted income types:', formattedTypes);
   
   return formattedTypes;
 };

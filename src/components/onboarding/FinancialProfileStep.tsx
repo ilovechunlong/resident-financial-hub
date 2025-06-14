@@ -13,14 +13,17 @@ interface FinancialProfileStepProps {
 export function FinancialProfileStep({ formData, updateFormData }: FinancialProfileStepProps) {
   const { data: incomeTypeMappings = [], isLoading, error } = useIncomeTypeCategoryMapping();
 
+  console.log('=== FinancialProfileStep Debug ===');
   console.log('Income type mappings from database:', incomeTypeMappings);
   console.log('Loading state:', isLoading);
   console.log('Error state:', error);
+  console.log('Raw data type:', typeof incomeTypeMappings);
+  console.log('Raw data:', incomeTypeMappings);
 
   // Extract unique income types from the mappings and format them
   const incomeTypes = formatIncomeTypes(incomeTypeMappings);
   
-  console.log('Formatted income types:', incomeTypes);
+  console.log('Final formatted income types in component:', incomeTypes);
 
   const handleIncomeTypeChange = (incomeTypeId: string, checked: boolean) => {
     const currentTypes = formData.income_types || [];
@@ -77,35 +80,38 @@ export function FinancialProfileStep({ formData, updateFormData }: FinancialProf
   }
 
   if (error) {
+    console.error('Error in FinancialProfileStep:', error);
     return (
       <div className="space-y-6">
         <div>
           <h3 className="text-lg font-semibold mb-4">Financial Profile</h3>
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <p className="text-red-800 text-sm">
-              Error loading income types. Please try again.
+              Error loading income types: {error.message || 'Unknown error'}. Using default income types.
             </p>
           </div>
+        </div>
+        
+        <div className="space-y-6">
+          <IncomeTypesGrid
+            incomeTypes={incomeTypes}
+            selectedTypes={formData.income_types || []}
+            onSelectionChange={handleIncomeTypeChange}
+          />
+
+          <CustomIncomeTypeForm onAddCustomType={addCustomIncomeType} />
+
+          <SelectedIncomeTypes
+            selectedTypes={formData.income_types || []}
+            getDisplayName={getDisplayName}
+            onRemoveCustomType={removeCustomIncomeType}
+          />
         </div>
       </div>
     );
   }
 
-  if (!incomeTypes || incomeTypes.length === 0) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h3 className="text-lg font-semibold mb-4">Financial Profile</h3>
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-            <p className="text-amber-800 text-sm">
-              No income types found in the database. Please contact your administrator.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  // Always show the income types, even if database is empty (fallback to defaults)
   return (
     <div className="space-y-6">
       <div>
@@ -113,6 +119,11 @@ export function FinancialProfileStep({ formData, updateFormData }: FinancialProf
         <p className="text-sm text-gray-600 mb-6">
           Select all applicable income sources for this resident. This will help configure appropriate billing and payment processing.
         </p>
+        {incomeTypeMappings.length === 0 && (
+          <p className="text-xs text-amber-600 mb-4">
+            Note: Using default income types. Database appears to be empty.
+          </p>
+        )}
       </div>
 
       <div className="space-y-6">
