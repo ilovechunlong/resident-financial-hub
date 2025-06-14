@@ -166,44 +166,6 @@ export function FinancialProfileStep({ formData, updateFormData }: FinancialProf
             </div>
           </div>
         )}
-
-        {/* Monthly Fee */}
-        <div>
-          <Label htmlFor="monthly_fee">Expected Monthly Fee</Label>
-          <Input
-            id="monthly_fee"
-            type="number"
-            step="0.01"
-            value={formData.monthly_fee}
-            onChange={(e) => updateFormData({ monthly_fee: parseFloat(e.target.value) || 0 })}
-            placeholder="0.00"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            This can be adjusted later based on final care plan and room assignment.
-          </p>
-        </div>
-
-        {/* Insurance Information */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="insurance_provider">Insurance Provider</Label>
-            <Input
-              id="insurance_provider"
-              value={formData.insurance_provider}
-              onChange={(e) => updateFormData({ insurance_provider: e.target.value })}
-              placeholder="e.g., Medicare, Medicaid, Private Insurance"
-            />
-          </div>
-          <div>
-            <Label htmlFor="insurance_policy_number">Policy Number</Label>
-            <Input
-              id="insurance_policy_number"
-              value={formData.insurance_policy_number}
-              onChange={(e) => updateFormData({ insurance_policy_number: e.target.value })}
-              placeholder="Enter policy number"
-            />
-          </div>
-        </div>
       </div>
 
       {formData.income_types && formData.income_types.length === 0 && (
