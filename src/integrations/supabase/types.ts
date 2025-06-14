@@ -251,6 +251,7 @@ export type Database = {
           first_name: string
           gender: string
           id: string
+          income_types: string[] | null
           last_name: string
           mobility_level: string
           notes: string | null
@@ -271,6 +272,7 @@ export type Database = {
           first_name: string
           gender: string
           id?: string
+          income_types?: string[] | null
           last_name: string
           mobility_level: string
           notes?: string | null
@@ -291,6 +293,7 @@ export type Database = {
           first_name?: string
           gender?: string
           id?: string
+          income_types?: string[] | null
           last_name?: string
           mobility_level?: string
           notes?: string | null

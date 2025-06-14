@@ -25,7 +25,6 @@ export function ResidentOnboardingForm({ onSubmit, onCancel, preSelectedNursingH
   
   const [formData, setFormData] = useState<ResidentFormData & { 
     social_security_number?: string;
-    income_types?: string[];
   }>({
     nursing_home_id: preSelectedNursingHomeId || '',
     first_name: '',
@@ -67,11 +66,11 @@ export function ResidentOnboardingForm({ onSubmit, onCancel, preSelectedNursingH
 
   const handleSubmit = () => {
     if (validateStep(currentStep, formData)) {
-      const { income_types, social_security_number, ...submitData } = formData;
-      // Add the income types to notes for now, since we don't have a separate field in the database
+      const { social_security_number, ...submitData } = formData;
+      // Add SSN to notes if provided, since we don't have a separate field in the database
       const finalData = {
         ...submitData,
-        notes: `${submitData.notes ? submitData.notes + '\n\n' : ''}Income Types: ${income_types?.join(', ') || 'None'}\nSSN: ${social_security_number || 'Not provided'}`
+        notes: `${submitData.notes ? submitData.notes + '\n\n' : ''}${social_security_number ? `SSN: ${social_security_number}` : ''}`
       };
       onSubmit(finalData);
     }

@@ -21,6 +21,7 @@ export interface Resident {
   insurance_policy_number?: string;
   notes?: string;
   status: 'active' | 'discharged' | 'deceased' | 'temporary_leave';
+  income_types?: string[];
   created_at: string;
   updated_at: string;
 }
@@ -46,4 +47,5 @@ export interface ResidentFormData {
   insurance_policy_number?: string;
   notes?: string;
   status: 'active' | 'discharged' | 'deceased' | 'temporary_leave';
+  income_types?: string[];
 }

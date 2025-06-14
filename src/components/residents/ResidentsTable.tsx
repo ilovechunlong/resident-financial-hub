@@ -30,17 +30,33 @@ export function ResidentsTable({
     return <Badge variant={variants[status] || 'secondary'}>{status.replace('_', ' ')}</Badge>;
   };
 
-  const getIncomeTypesFromNotes = (notes: string | undefined) => {
-    if (!notes) return 'Not specified';
+  const getDisplayName = (typeId: string) => {
+    const incomeTypes = [
+      { id: 'ssi', label: 'SSI (Supplemental Security Income)' },
+      { id: 'ssdi', label: 'SSDI (Social Security Disability Insurance)' },
+      { id: 'grant', label: 'Grant' },
+      { id: 'waiver', label: 'Waiver' },
+      { id: 'pension', label: 'Pension' },
+      { id: 'family_support', label: 'Family Support' },
+      { id: 'other', label: 'Other' },
+    ];
+
+    const standardType = incomeTypes.find(type => type.id === typeId);
+    if (standardType) return standardType.label;
     
-    // Extract income types from notes
-    const incomeTypesMatch = notes.match(/Income Types: ([^\n]*)/);
-    if (incomeTypesMatch && incomeTypesMatch[1]) {
-      const incomeTypes = incomeTypesMatch[1].trim();
-      return incomeTypes === 'None' ? 'Not specified' : incomeTypes;
+    if (typeId.startsWith('custom_')) {
+      return typeId.replace('custom_', '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
     
-    return 'Not specified';
+    return typeId;
+  };
+
+  const formatIncomeTypes = (incomeTypes: string[] | undefined) => {
+    if (!incomeTypes || incomeTypes.length === 0) {
+      return 'Not specified';
+    }
+    
+    return incomeTypes.map(type => getDisplayName(type)).join(', ');
   };
 
   const filteredResidents = residents.filter(resident => {
@@ -89,7 +105,7 @@ export function ResidentsTable({
                 </TableCell>
                 <TableCell>
                   <div className="text-sm">
-                    {getIncomeTypesFromNotes(resident.notes)}
+                    {formatIncomeTypes(resident.income_types)}
                   </div>
                 </TableCell>
                 <TableCell className="text-right">
