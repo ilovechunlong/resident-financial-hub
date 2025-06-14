@@ -105,6 +105,38 @@ export type Database = {
           },
         ]
       }
+      generated_reports: {
+        Row: {
+          configuration_id: string | null
+          generated_at: string
+          id: string
+          report_data: Json
+          status: string
+        }
+        Insert: {
+          configuration_id?: string | null
+          generated_at?: string
+          id?: string
+          report_data: Json
+          status?: string
+        }
+        Update: {
+          configuration_id?: string | null
+          generated_at?: string
+          id?: string
+          report_data?: Json
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_reports_configuration_id_fkey"
+            columns: ["configuration_id"]
+            isOneToOne: false
+            referencedRelation: "report_configurations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       nursing_homes: {
         Row: {
           accreditation: string | null
@@ -171,6 +203,39 @@ export type Database = {
           status?: string
           updated_at?: string
           zip_code?: string
+        }
+        Relationships: []
+      }
+      report_configurations: {
+        Row: {
+          created_at: string
+          date_range_end: string | null
+          date_range_start: string | null
+          filters: Json | null
+          id: string
+          name: string
+          report_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date_range_end?: string | null
+          date_range_start?: string | null
+          filters?: Json | null
+          id?: string
+          name: string
+          report_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date_range_end?: string | null
+          date_range_start?: string | null
+          filters?: Json | null
+          id?: string
+          name?: string
+          report_type?: string
+          updated_at?: string
         }
         Relationships: []
       }

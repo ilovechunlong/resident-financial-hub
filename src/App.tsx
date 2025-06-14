@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import NursingHomes from "./pages/NursingHomes";
 import Residents from "./pages/Residents";
 import Finances from "./pages/Finances";
+import Reports from "./pages/Reports";
 
 const queryClient = new QueryClient();
 
@@ -42,10 +43,7 @@ const App = () => (
           } />
           <Route path="/reports" element={
             <DashboardLayout>
-              <div className="text-center py-12">
-                <h1 className="text-2xl font-bold mb-4">Reports</h1>
-                <p className="text-muted-foreground">Generate comprehensive financial and operational reports.</p>
-              </div>
+              <Reports />
             </DashboardLayout>
           } />
           <Route path="/settings" element={
