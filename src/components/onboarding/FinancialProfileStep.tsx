@@ -11,9 +11,11 @@ interface FinancialProfileStepProps {
 }
 
 export function FinancialProfileStep({ formData, updateFormData }: FinancialProfileStepProps) {
-  const { data: incomeTypeMappings = [], isLoading } = useIncomeTypeCategoryMapping();
+  const { data: incomeTypeMappings = [], isLoading, error } = useIncomeTypeCategoryMapping();
 
   console.log('Income type mappings from database:', incomeTypeMappings);
+  console.log('Loading state:', isLoading);
+  console.log('Error state:', error);
 
   // Extract unique income types from the mappings and format them
   const incomeTypes = formatIncomeTypes(incomeTypeMappings);
@@ -69,6 +71,36 @@ export function FinancialProfileStep({ formData, updateFormData }: FinancialProf
         <div>
           <h3 className="text-lg font-semibold mb-4">Financial Profile</h3>
           <p className="text-sm text-gray-600 mb-6">Loading income types...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-lg font-semibold mb-4">Financial Profile</h3>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-red-800 text-sm">
+              Error loading income types. Please try again.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!incomeTypes || incomeTypes.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-lg font-semibold mb-4">Financial Profile</h3>
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <p className="text-amber-800 text-sm">
+              No income types found in the database. Please contact your administrator.
+            </p>
+          </div>
         </div>
       </div>
     );

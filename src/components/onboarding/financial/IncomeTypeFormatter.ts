@@ -58,6 +58,11 @@ export const getIncomeTypeDescription = (type: string): string => {
 export const formatIncomeTypes = (incomeTypeMappings: IncomeTypeCategoryMapping[]) => {
   console.log('Raw income type mappings:', incomeTypeMappings);
   
+  if (!incomeTypeMappings || incomeTypeMappings.length === 0) {
+    console.log('No income type mappings found, returning empty array');
+    return [];
+  }
+  
   // Extract unique income types from the mappings
   const uniqueIncomeTypes = Array.from(
     new Set(incomeTypeMappings.map(mapping => mapping.income_type))
