@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,20 +7,21 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ResidentForm } from '@/components/ResidentForm';
+import { ResidentOnboardingForm } from '@/components/ResidentOnboardingForm';
 import { useResidents } from '@/hooks/useResidents';
 import { Plus, Search, Edit, Trash2, Users, UserCheck, UserX, Clock } from 'lucide-react';
 import { Resident } from '@/types/resident';
 
 export default function Residents() {
   const { residents, loading, addResident, updateResident, deleteResident } = useResidents();
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   const [editingResident, setEditingResident] = useState<Resident | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
   const handleAddResident = async (data: any) => {
     await addResident(data);
-    setIsFormOpen(false);
+    setIsOnboardingOpen(false);
   };
 
   const handleEditResident = async (data: any) => {
@@ -99,9 +99,9 @@ export default function Residents() {
           <h1 className="text-3xl font-bold text-foreground">Resident Management</h1>
           <p className="text-muted-foreground">Manage residents across all facilities</p>
         </div>
-        <Button onClick={() => setIsFormOpen(true)} className="bg-healthcare-primary hover:bg-healthcare-primary/90">
+        <Button onClick={() => setIsOnboardingOpen(true)} className="bg-healthcare-primary hover:bg-healthcare-primary/90">
           <Plus className="h-4 w-4 mr-2" />
-          Add Resident
+          Onboard New Resident
         </Button>
       </div>
 
@@ -247,15 +247,15 @@ export default function Residents() {
         </CardContent>
       </Card>
 
-      {/* Add Resident Dialog */}
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      {/* Onboard New Resident Dialog */}
+      <Dialog open={isOnboardingOpen} onOpenChange={setIsOnboardingOpen}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Add New Resident</DialogTitle>
+            <DialogTitle>Onboard New Resident</DialogTitle>
           </DialogHeader>
-          <ResidentForm
+          <ResidentOnboardingForm
             onSubmit={handleAddResident}
-            onCancel={() => setIsFormOpen(false)}
+            onCancel={() => setIsOnboardingOpen(false)}
           />
         </DialogContent>
       </Dialog>
