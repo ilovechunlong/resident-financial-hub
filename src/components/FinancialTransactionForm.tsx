@@ -75,7 +75,8 @@ export function FinancialTransactionForm({ onSuccess }: FinancialTransactionForm
             <BasicTransactionFields 
               form={form} 
               categories={categories} 
-              watchTransactionType={watchTransactionType} 
+              watchTransactionType={watchTransactionType}
+              residents={residents}
             />
 
             <LocationFields 

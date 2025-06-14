@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import {
   FormControl,
@@ -23,12 +23,44 @@ interface BasicTransactionFieldsProps {
   form: UseFormReturn<FinancialTransactionFormValues>;
   categories: FinancialCategory[];
   watchTransactionType: 'income' | 'expense';
+  residents?: any[];
 }
 
-export function BasicTransactionFields({ form, categories, watchTransactionType }: BasicTransactionFieldsProps) {
-  const filteredCategories = categories.filter(
-    category => category.transaction_type === watchTransactionType
-  );
+export function BasicTransactionFields({ form, categories, watchTransactionType, residents = [] }: BasicTransactionFieldsProps) {
+  const watchResidentId = form.watch('resident_id');
+  
+  // Find the selected resident
+  const selectedResident = residents.find(resident => resident.id === watchResidentId);
+  
+  // Filter categories based on transaction type and resident's income types
+  const getFilteredCategories = () => {
+    let filteredCategories = categories.filter(
+      category => category.transaction_type === watchTransactionType
+    );
+
+    // If transaction type is income and a resident is selected, filter by resident's income types
+    if (watchTransactionType === 'income' && selectedResident && selectedResident.income_types) {
+      filteredCategories = filteredCategories.filter(category => 
+        selectedResident.income_types.includes(category.name)
+      );
+    }
+
+    return filteredCategories;
+  };
+
+  const filteredCategories = getFilteredCategories();
+
+  // Clear category when resident changes and transaction type is income
+  useEffect(() => {
+    if (watchTransactionType === 'income' && watchResidentId) {
+      const currentCategory = form.getValues('category');
+      const isCurrentCategoryValid = filteredCategories.some(cat => cat.name === currentCategory);
+      
+      if (!isCurrentCategoryValid) {
+        form.setValue('category', '');
+      }
+    }
+  }, [watchResidentId, watchTransactionType, form, filteredCategories]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
