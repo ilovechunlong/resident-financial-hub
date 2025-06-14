@@ -121,7 +121,7 @@ export function BasicTransactionFields({ form, categories, watchTransactionType,
                     </SelectItem>
                   ))
                 ) : (
-                  <SelectItem value="" disabled>
+                  <SelectItem value="no-categories-available" disabled>
                     No categories available
                   </SelectItem>
                 )}
