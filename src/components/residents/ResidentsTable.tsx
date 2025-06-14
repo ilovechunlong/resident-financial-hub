@@ -30,21 +30,17 @@ export function ResidentsTable({
     return <Badge variant={variants[status] || 'secondary'}>{status.replace('_', ' ')}</Badge>;
   };
 
-  const getCareLevel = (level: string) => {
-    return level.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
-  };
-
-  const getAge = (dateOfBirth: string) => {
-    const today = new Date();
-    const birthDate = new Date(dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDifference = today.getMonth() - birthDate.getMonth();
+  const getIncomeTypesFromNotes = (notes: string | undefined) => {
+    if (!notes) return 'Not specified';
     
-    if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
+    // Extract income types from notes
+    const incomeTypesMatch = notes.match(/Income Types: ([^\n]*)/);
+    if (incomeTypesMatch && incomeTypesMatch[1]) {
+      const incomeTypes = incomeTypesMatch[1].trim();
+      return incomeTypes === 'None' ? 'Not specified' : incomeTypes;
     }
     
-    return age;
+    return 'Not specified';
   };
 
   const filteredResidents = residents.filter(resident => {
@@ -64,20 +60,16 @@ export function ResidentsTable({
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
-            <TableHead>Age</TableHead>
             <TableHead>Facility</TableHead>
-            <TableHead>Room</TableHead>
-            <TableHead>Care Level</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Monthly Fee</TableHead>
-            <TableHead>Admission Date</TableHead>
+            <TableHead>Emergency Contact</TableHead>
+            <TableHead>Income Types</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {filteredResidents.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
+              <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                 {searchTerm || statusFilter !== 'all' ? 'No residents match your filters.' : 'No residents found. Add your first resident to get started.'}
               </TableCell>
             </TableRow>
@@ -87,13 +79,19 @@ export function ResidentsTable({
                 <TableCell className="font-medium">
                   {resident.first_name} {resident.last_name}
                 </TableCell>
-                <TableCell>{getAge(resident.date_of_birth)}</TableCell>
                 <TableCell>{(resident as any).nursing_home_name || 'Unknown'}</TableCell>
-                <TableCell>{resident.room_number || 'Not assigned'}</TableCell>
-                <TableCell>{getCareLevel(resident.care_level)}</TableCell>
-                <TableCell>{getStatusBadge(resident.status)}</TableCell>
-                <TableCell>${resident.monthly_fee.toLocaleString()}</TableCell>
-                <TableCell>{new Date(resident.admission_date).toLocaleDateString()}</TableCell>
+                <TableCell>
+                  <div className="space-y-1">
+                    <div className="font-medium">{resident.emergency_contact_name}</div>
+                    <div className="text-sm text-gray-600">{resident.emergency_contact_phone}</div>
+                    <div className="text-xs text-gray-500">{resident.emergency_contact_relationship}</div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="text-sm">
+                    {getIncomeTypesFromNotes(resident.notes)}
+                  </div>
+                </TableCell>
                 <TableCell className="text-right">
                   <div className="flex gap-2 justify-end">
                     <Button

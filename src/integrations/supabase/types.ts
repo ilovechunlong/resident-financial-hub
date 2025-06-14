@@ -258,7 +258,6 @@ export type Database = {
           medical_conditions: string[] | null
           medications: string[] | null
           mobility_level: string
-          monthly_fee: number
           notes: string | null
           nursing_home_id: string
           phone_number: string | null
@@ -284,7 +283,6 @@ export type Database = {
           medical_conditions?: string[] | null
           medications?: string[] | null
           mobility_level: string
-          monthly_fee: number
           notes?: string | null
           nursing_home_id: string
           phone_number?: string | null
@@ -310,7 +308,6 @@ export type Database = {
           medical_conditions?: string[] | null
           medications?: string[] | null
           mobility_level?: string
-          monthly_fee?: number
           notes?: string | null
           nursing_home_id?: string
           phone_number?: string | null
