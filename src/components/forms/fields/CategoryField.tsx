@@ -68,15 +68,20 @@ export function CategoryField({ form, categories, watchTransactionType, resident
       console.log('Selected resident income types:', selectedResident.income_types);
       
       // Get all allowed category names based on the resident's income types
-      const allowedCategoryNames = selectedResident.income_types.reduce((acc: string[], incomeType: string) => {
-        const mappedCategories = INCOME_TYPE_TO_CATEGORY_MAPPING[incomeType] || [];
-        return [...acc, ...mappedCategories];
-      }, []);
+      const allowedCategoryNames: string[] = [];
       
-      console.log('Allowed category names based on income types:', allowedCategoryNames);
+      selectedResident.income_types.forEach((incomeType: string) => {
+        const mappedCategories = INCOME_TYPE_TO_CATEGORY_MAPPING[incomeType] || [];
+        allowedCategoryNames.push(...mappedCategories);
+      });
+      
+      // Remove duplicates
+      const uniqueAllowedCategoryNames = [...new Set(allowedCategoryNames)];
+      
+      console.log('Allowed category names based on income types:', uniqueAllowedCategoryNames);
       
       filteredCategories = filteredCategories.filter(category => 
-        allowedCategoryNames.includes(category.name)
+        uniqueAllowedCategoryNames.includes(category.name)
       );
       
       console.log('Categories after income types filter:', filteredCategories);
