@@ -23,7 +23,14 @@ export const useFinancialTransactions = () => {
       }
 
       console.log('Financial transactions fetched:', data);
-      return data;
+      // Cast the data to match our TypeScript interface
+      return data.map(transaction => ({
+        ...transaction,
+        transaction_type: transaction.transaction_type as 'income' | 'expense',
+        payment_method: transaction.payment_method as 'cash' | 'check' | 'credit_card' | 'bank_transfer' | 'insurance' | undefined,
+        recurring_frequency: transaction.recurring_frequency as 'weekly' | 'monthly' | 'quarterly' | 'yearly' | undefined,
+        status: transaction.status as 'pending' | 'completed' | 'cancelled'
+      }));
     },
   });
 };
@@ -48,7 +55,14 @@ export const useAddFinancialTransaction = () => {
       }
 
       console.log('Financial transaction added:', data);
-      return data;
+      // Cast the data to match our TypeScript interface
+      return {
+        ...data,
+        transaction_type: data.transaction_type as 'income' | 'expense',
+        payment_method: data.payment_method as 'cash' | 'check' | 'credit_card' | 'bank_transfer' | 'insurance' | undefined,
+        recurring_frequency: data.recurring_frequency as 'weekly' | 'monthly' | 'quarterly' | 'yearly' | undefined,
+        status: data.status as 'pending' | 'completed' | 'cancelled'
+      };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['financial-transactions'] });
@@ -86,7 +100,11 @@ export const useFinancialCategories = () => {
       }
 
       console.log('Financial categories fetched:', data);
-      return data;
+      // Cast the data to match our TypeScript interface
+      return data.map(category => ({
+        ...category,
+        transaction_type: category.transaction_type as 'income' | 'expense'
+      }));
     },
   });
 };

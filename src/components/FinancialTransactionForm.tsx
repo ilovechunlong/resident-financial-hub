@@ -49,8 +49,8 @@ interface FinancialTransactionFormProps {
 
 export function FinancialTransactionForm({ onSuccess }: FinancialTransactionFormProps) {
   const { data: categories = [] } = useFinancialCategories();
-  const { data: nursingHomes = [] } = useNursingHomes();
-  const { data: residents = [] } = useResidents();
+  const { nursingHomes = [] } = useNursingHomes();
+  const { residents = [] } = useResidents();
   const addTransaction = useAddFinancialTransaction();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -72,12 +72,18 @@ export function FinancialTransactionForm({ onSuccess }: FinancialTransactionForm
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const transactionData: FinancialTransactionFormData = {
-      ...values,
-      nursing_home_id: values.nursing_home_id || undefined,
-      resident_id: values.resident_id || undefined,
+      transaction_type: values.transaction_type,
+      category: values.category,
+      amount: values.amount,
+      description: values.description || undefined,
+      transaction_date: values.transaction_date,
       payment_method: values.payment_method || undefined,
       reference_number: values.reference_number || undefined,
+      nursing_home_id: values.nursing_home_id || undefined,
+      resident_id: values.resident_id || undefined,
+      is_recurring: values.is_recurring || false,
       recurring_frequency: values.is_recurring ? values.recurring_frequency : undefined,
+      status: values.status,
     };
 
     await addTransaction.mutateAsync(transactionData);
