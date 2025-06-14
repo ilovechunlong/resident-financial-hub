@@ -169,10 +169,6 @@ export function ReviewStep({ formData, nursingHomes }: ReviewStepProps) {
             </div>
             <div className="grid grid-cols-2 gap-4 mt-4">
               <div>
-                <span className="text-sm text-gray-600">Monthly Fee:</span>
-                <p className="font-medium">${formData.monthly_fee?.toLocaleString() || '0'}</p>
-              </div>
-              <div>
                 <span className="text-sm text-gray-600">Insurance Provider:</span>
                 <p className="font-medium">{formData.insurance_provider || 'Not provided'}</p>
               </div>
