@@ -1,8 +1,8 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ReportConfiguration, GeneratedReport, ReportFormData } from '@/types/report';
 import { useToast } from '@/hooks/use-toast';
+import { ReportGenerator } from '@/utils/reportGenerator';
 
 export const useReportConfigurations = () => {
   return useQuery({
@@ -102,20 +102,40 @@ export const useGenerateReport = () => {
     mutationFn: async (configurationId: string): Promise<GeneratedReport> => {
       console.log('Generating report for configuration:', configurationId);
       
-      // For now, we'll create a simple report with mock data
-      // In a real implementation, this would process the actual data
-      const reportData = {
-        generated_at: new Date().toISOString(),
-        summary: "Report generated successfully",
-        total_records: 0,
-        // Add more fields based on report type
-      };
+      // Get the configuration details
+      const { data: config, error: configError } = await supabase
+        .from('report_configurations')
+        .select('*')
+        .eq('id', configurationId)
+        .single();
 
+      if (configError) {
+        console.error('Error fetching configuration:', configError);
+        throw configError;
+      }
+
+      // Generate the actual report data
+      const reportData = await ReportGenerator.generateReportData(
+        configurationId,
+        config.report_type,
+        {
+          start: config.date_range_start || undefined,
+          end: config.date_range_end || undefined,
+        }
+      );
+
+      // Store the generated report in the database
       const { data, error } = await supabase
         .from('generated_reports')
         .insert([{
           configuration_id: configurationId,
-          report_data: reportData,
+          report_data: {
+            summary: reportData.summary,
+            total_records: reportData.data.length,
+            generated_at: new Date().toISOString(),
+            report_type: config.report_type,
+            date_range: reportData.dateRange
+          },
           status: 'completed'
         }])
         .select()

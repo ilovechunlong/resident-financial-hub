@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PlayIcon, FileTextIcon } from 'lucide-react';
 import { useReportConfigurations, useGenerateReport } from '@/hooks/useReports';
+import { ReportExportButton } from '@/components/ReportExportButton';
 
 export function ReportsList() {
   const { data: reportConfigurations, isLoading } = useReportConfigurations();
@@ -100,14 +101,17 @@ export function ReportsList() {
                   </span>
                 </TableCell>
                 <TableCell>
-                  <Button
-                    size="sm"
-                    onClick={() => handleGenerateReport(config.id)}
-                    disabled={generateReportMutation.isPending}
-                  >
-                    <PlayIcon className="h-4 w-4 mr-2" />
-                    Generate
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => handleGenerateReport(config.id)}
+                      disabled={generateReportMutation.isPending}
+                    >
+                      <PlayIcon className="h-4 w-4 mr-2" />
+                      Generate
+                    </Button>
+                    <ReportExportButton configuration={config} />
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
