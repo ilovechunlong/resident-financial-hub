@@ -9,7 +9,75 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      nursing_homes: {
+        Row: {
+          accreditation: string | null
+          address: string
+          administrator: string
+          amenities: string[] | null
+          capacity: number
+          city: string
+          created_at: string
+          current_residents: number
+          description: string | null
+          email: string
+          id: string
+          license_number: string
+          monthly_rate: number
+          name: string
+          phone_number: string
+          specialties: string[] | null
+          state: string
+          status: string
+          updated_at: string
+          zip_code: string
+        }
+        Insert: {
+          accreditation?: string | null
+          address: string
+          administrator: string
+          amenities?: string[] | null
+          capacity: number
+          city: string
+          created_at?: string
+          current_residents?: number
+          description?: string | null
+          email: string
+          id?: string
+          license_number: string
+          monthly_rate: number
+          name: string
+          phone_number: string
+          specialties?: string[] | null
+          state: string
+          status: string
+          updated_at?: string
+          zip_code: string
+        }
+        Update: {
+          accreditation?: string | null
+          address?: string
+          administrator?: string
+          amenities?: string[] | null
+          capacity?: number
+          city?: string
+          created_at?: string
+          current_residents?: number
+          description?: string | null
+          email?: string
+          id?: string
+          license_number?: string
+          monthly_rate?: number
+          name?: string
+          phone_number?: string
+          specialties?: string[] | null
+          state?: string
+          status?: string
+          updated_at?: string
+          zip_code?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

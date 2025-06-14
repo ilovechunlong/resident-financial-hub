@@ -5,21 +5,21 @@ export interface NursingHome {
   address: string;
   city: string;
   state: string;
-  zipCode: string;
-  phoneNumber: string;
+  zip_code: string;
+  phone_number: string;
   email: string;
   capacity: number;
-  currentResidents: number;
+  current_residents: number;
   status: 'active' | 'inactive' | 'maintenance';
   administrator: string;
-  licenseNumber: string;
+  license_number: string;
   accreditation?: string;
   specialties: string[];
   amenities: string[];
   description?: string;
-  monthlyRate: number;
-  createdAt: Date;
-  updatedAt: Date;
+  monthly_rate: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface NursingHomeFormData {
@@ -27,17 +27,17 @@ export interface NursingHomeFormData {
   address: string;
   city: string;
   state: string;
-  zipCode: string;
-  phoneNumber: string;
+  zip_code: string;
+  phone_number: string;
   email: string;
   capacity: number;
-  currentResidents: number;
+  current_residents: number;
   status: 'active' | 'inactive' | 'maintenance';
   administrator: string;
-  licenseNumber: string;
+  license_number: string;
   accreditation?: string;
   specialties: string[];
   amenities: string[];
   description?: string;
-  monthlyRate: number;
+  monthly_rate: number;
 }

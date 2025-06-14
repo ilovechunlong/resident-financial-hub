@@ -16,19 +16,19 @@ const nursingHomeSchema = z.object({
   address: z.string().min(1, 'Address is required'),
   city: z.string().min(1, 'City is required'),
   state: z.string().min(1, 'State is required'),
-  zipCode: z.string().min(5, 'Valid zip code is required'),
-  phoneNumber: z.string().min(10, 'Valid phone number is required'),
+  zip_code: z.string().min(5, 'Valid zip code is required'),
+  phone_number: z.string().min(10, 'Valid phone number is required'),
   email: z.string().email('Valid email is required'),
   capacity: z.number().min(1, 'Capacity must be at least 1'),
-  currentResidents: z.number().min(0, 'Current residents cannot be negative'),
+  current_residents: z.number().min(0, 'Current residents cannot be negative'),
   status: z.enum(['active', 'inactive', 'maintenance']),
   administrator: z.string().min(1, 'Administrator is required'),
-  licenseNumber: z.string().min(1, 'License number is required'),
+  license_number: z.string().min(1, 'License number is required'),
   accreditation: z.string().optional(),
   specialties: z.array(z.string()),
   amenities: z.array(z.string()),
   description: z.string().optional(),
-  monthlyRate: z.number().min(0, 'Monthly rate cannot be negative'),
+  monthly_rate: z.number().min(0, 'Monthly rate cannot be negative'),
 });
 
 interface NursingHomeFormProps {
@@ -45,44 +45,44 @@ export function NursingHomeForm({ initialData, onSubmit, onCancel }: NursingHome
       address: initialData.address,
       city: initialData.city,
       state: initialData.state,
-      zipCode: initialData.zipCode,
-      phoneNumber: initialData.phoneNumber,
+      zip_code: initialData.zip_code,
+      phone_number: initialData.phone_number,
       email: initialData.email,
       capacity: initialData.capacity,
-      currentResidents: initialData.currentResidents,
+      current_residents: initialData.current_residents,
       status: initialData.status,
       administrator: initialData.administrator,
-      licenseNumber: initialData.licenseNumber,
+      license_number: initialData.license_number,
       accreditation: initialData.accreditation,
       specialties: initialData.specialties,
       amenities: initialData.amenities,
       description: initialData.description,
-      monthlyRate: initialData.monthlyRate,
+      monthly_rate: initialData.monthly_rate,
     } : {
       name: '',
       address: '',
       city: '',
       state: '',
-      zipCode: '',
-      phoneNumber: '',
+      zip_code: '',
+      phone_number: '',
       email: '',
       capacity: 0,
-      currentResidents: 0,
+      current_residents: 0,
       status: 'active',
       administrator: '',
-      licenseNumber: '',
+      license_number: '',
       accreditation: '',
       specialties: [],
       amenities: [],
       description: '',
-      monthlyRate: 0,
+      monthly_rate: 0,
     }
   });
 
   const handleSubmit = (data: NursingHomeFormData) => {
     // Validate that current residents doesn't exceed capacity
-    if (data.currentResidents > data.capacity) {
-      form.setError('currentResidents', {
+    if (data.current_residents > data.capacity) {
+      form.setError('current_residents', {
         type: 'manual',
         message: 'Current residents cannot exceed capacity'
       });
@@ -186,7 +186,7 @@ export function NursingHomeForm({ initialData, onSubmit, onCancel }: NursingHome
                   />
                   <FormField
                     control={form.control}
-                    name="zipCode"
+                    name="zip_code"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Zip Code</FormLabel>
@@ -206,7 +206,7 @@ export function NursingHomeForm({ initialData, onSubmit, onCancel }: NursingHome
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="phoneNumber"
+                    name="phone_number"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Phone Number</FormLabel>
@@ -257,7 +257,7 @@ export function NursingHomeForm({ initialData, onSubmit, onCancel }: NursingHome
                   />
                   <FormField
                     control={form.control}
-                    name="currentResidents"
+                    name="current_residents"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Current Residents</FormLabel>
@@ -275,7 +275,7 @@ export function NursingHomeForm({ initialData, onSubmit, onCancel }: NursingHome
                   />
                   <FormField
                     control={form.control}
-                    name="monthlyRate"
+                    name="monthly_rate"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Monthly Rate ($)</FormLabel>
@@ -320,7 +320,7 @@ export function NursingHomeForm({ initialData, onSubmit, onCancel }: NursingHome
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="licenseNumber"
+                    name="license_number"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>License Number</FormLabel>

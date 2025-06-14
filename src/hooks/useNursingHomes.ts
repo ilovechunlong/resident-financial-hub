@@ -1,87 +1,160 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { NursingHome, NursingHomeFormData } from '@/types/nursingHome';
-
-// Mock data for demonstration
-const mockNursingHomes: NursingHome[] = [
-  {
-    id: '1',
-    name: 'Sunset Manor Care Center',
-    address: '123 Oak Street',
-    city: 'Springfield',
-    state: 'IL',
-    zipCode: '62701',
-    phoneNumber: '(555) 123-4567',
-    email: 'admin@sunsetmanor.com',
-    capacity: 150,
-    currentResidents: 142,
-    status: 'active',
-    administrator: 'Sarah Johnson',
-    licenseNumber: 'NH-IL-001234',
-    accreditation: 'Joint Commission',
-    specialties: ['Memory Care', 'Rehabilitation', 'Hospice Care'],
-    amenities: ['Garden', 'Library', 'Physical Therapy', 'Beauty Salon'],
-    description: 'A leading care facility providing comprehensive services for seniors.',
-    monthlyRate: 4500,
-    createdAt: new Date('2023-01-15'),
-    updatedAt: new Date('2024-01-10'),
-  },
-  {
-    id: '2',
-    name: 'Golden Years Residence',
-    address: '456 Maple Avenue',
-    city: 'Springfield',
-    state: 'IL',
-    zipCode: '62702',
-    phoneNumber: '(555) 234-5678',
-    email: 'info@goldenyears.com',
-    capacity: 100,
-    currentResidents: 85,
-    status: 'active',
-    administrator: 'Michael Chen',
-    licenseNumber: 'NH-IL-001235',
-    accreditation: 'CARF',
-    specialties: ['Assisted Living', 'Independent Living'],
-    amenities: ['Pool', 'Fitness Center', 'Restaurant', 'Chapel'],
-    description: 'Modern facility focusing on active senior living.',
-    monthlyRate: 3800,
-    createdAt: new Date('2023-03-20'),
-    updatedAt: new Date('2024-01-08'),
-  },
-];
+import { useToast } from '@/hooks/use-toast';
 
 export function useNursingHomes() {
-  const [nursingHomes, setNursingHomes] = useState<NursingHome[]>(mockNursingHomes);
+  const [nursingHomes, setNursingHomes] = useState<NursingHome[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
-  const addNursingHome = useCallback((data: NursingHomeFormData) => {
-    const newHome: NursingHome = {
-      ...data,
-      id: Math.random().toString(36).substr(2, 9),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    setNursingHomes(prev => [...prev, newHome]);
-    console.log('Added nursing home:', newHome);
-  }, []);
+  const fetchNursingHomes = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('nursing_homes')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-  const updateNursingHome = useCallback((id: string, data: NursingHomeFormData) => {
-    setNursingHomes(prev => prev.map(home => 
-      home.id === id 
-        ? { ...home, ...data, updatedAt: new Date() }
-        : home
-    ));
-    console.log('Updated nursing home:', id, data);
-  }, []);
+      if (error) {
+        console.error('Error fetching nursing homes:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to fetch nursing homes',
+          variant: 'destructive',
+        });
+        return;
+      }
 
-  const deleteNursingHome = useCallback((id: string) => {
-    setNursingHomes(prev => prev.filter(home => home.id !== id));
-    console.log('Deleted nursing home:', id);
-  }, []);
+      setNursingHomes(data || []);
+      console.log('Fetched nursing homes:', data);
+    } catch (error) {
+      console.error('Error in fetchNursingHomes:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch nursing homes',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    fetchNursingHomes();
+  }, [fetchNursingHomes]);
+
+  const addNursingHome = useCallback(async (data: NursingHomeFormData) => {
+    try {
+      const { data: newHome, error } = await supabase
+        .from('nursing_homes')
+        .insert([data])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error adding nursing home:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to add nursing home',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setNursingHomes(prev => [newHome, ...prev]);
+      toast({
+        title: 'Success',
+        description: 'Nursing home added successfully',
+      });
+      console.log('Added nursing home:', newHome);
+    } catch (error) {
+      console.error('Error in addNursingHome:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to add nursing home',
+        variant: 'destructive',
+      });
+    }
+  }, [toast]);
+
+  const updateNursingHome = useCallback(async (id: string, data: NursingHomeFormData) => {
+    try {
+      const { data: updatedHome, error } = await supabase
+        .from('nursing_homes')
+        .update(data)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating nursing home:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to update nursing home',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setNursingHomes(prev => prev.map(home => 
+        home.id === id ? updatedHome : home
+      ));
+      toast({
+        title: 'Success',
+        description: 'Nursing home updated successfully',
+      });
+      console.log('Updated nursing home:', updatedHome);
+    } catch (error) {
+      console.error('Error in updateNursingHome:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update nursing home',
+        variant: 'destructive',
+      });
+    }
+  }, [toast]);
+
+  const deleteNursingHome = useCallback(async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('nursing_homes')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error deleting nursing home:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to delete nursing home',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setNursingHomes(prev => prev.filter(home => home.id !== id));
+      toast({
+        title: 'Success',
+        description: 'Nursing home deleted successfully',
+      });
+      console.log('Deleted nursing home:', id);
+    } catch (error) {
+      console.error('Error in deleteNursingHome:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete nursing home',
+        variant: 'destructive',
+      });
+    }
+  }, [toast]);
 
   return {
     nursingHomes,
+    loading,
     addNursingHome,
     updateNursingHome,
     deleteNursingHome,
+    refetch: fetchNursingHomes,
   };
 }

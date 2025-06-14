@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Building2, MapPin, Phone, Users } from 'lucide-react';
+import { Plus, Edit, Trash2, Building2, MapPin, Phone, Users, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -11,7 +11,7 @@ import { NursingHome } from '@/types/nursingHome';
 export default function NursingHomes() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingHome, setEditingHome] = useState<NursingHome | undefined>();
-  const { nursingHomes, addNursingHome, updateNursingHome, deleteNursingHome } = useNursingHomes();
+  const { nursingHomes, loading, addNursingHome, updateNursingHome, deleteNursingHome } = useNursingHomes();
 
   const handleEdit = (home: NursingHome) => {
     setEditingHome(home);
@@ -24,7 +24,7 @@ export default function NursingHomes() {
     }
   };
 
-  const handleFormSubmit = (data: Omit<NursingHome, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const handleFormSubmit = (data: Omit<NursingHome, 'id' | 'created_at' | 'updated_at'>) => {
     if (editingHome) {
       updateNursingHome(editingHome.id, data);
     } else {
@@ -38,6 +38,17 @@ export default function NursingHomes() {
     setIsFormOpen(false);
     setEditingHome(undefined);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Loading nursing homes...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -81,7 +92,7 @@ export default function NursingHomes() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {nursingHomes.reduce((sum, home) => sum + home.currentResidents, 0)}
+              {nursingHomes.reduce((sum, home) => sum + home.current_residents, 0)}
             </div>
           </CardContent>
         </Card>
@@ -93,7 +104,7 @@ export default function NursingHomes() {
           <CardContent>
             <div className="text-2xl font-bold">
               {nursingHomes.length > 0 
-                ? Math.round((nursingHomes.reduce((sum, home) => sum + home.currentResidents, 0) / 
+                ? Math.round((nursingHomes.reduce((sum, home) => sum + home.current_residents, 0) / 
                    nursingHomes.reduce((sum, home) => sum + home.capacity, 0)) * 100)
                 : 0}%
             </div>
@@ -148,17 +159,17 @@ export default function NursingHomes() {
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <Phone className="h-3 w-3 text-muted-foreground" />
-                        <span className="text-sm">{home.phoneNumber}</span>
+                        <span className="text-sm">{home.phone_number}</span>
                       </div>
                     </TableCell>
                     <TableCell>{home.capacity}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <span>{home.currentResidents}/{home.capacity}</span>
+                        <span>{home.current_residents}/{home.capacity}</span>
                         <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
                           <div 
                             className="h-full bg-healthcare-primary rounded-full"
-                            style={{ width: `${(home.currentResidents / home.capacity) * 100}%` }}
+                            style={{ width: `${(home.current_residents / home.capacity) * 100}%` }}
                           />
                         </div>
                       </div>
