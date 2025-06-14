@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -67,7 +66,7 @@ export default {
 				healthcare: {
 					primary: '#8B5CF6', // Purple
 					secondary: '#0D9488', // Teal
-					accent: '#EC4899', // Pink
+					accent: '#D81B60', // Darker Pink for better contrast
 					light: '#F8FAFC',
 					dark: '#1E293B'
 				}
