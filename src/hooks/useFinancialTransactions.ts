@@ -108,3 +108,6 @@ export const useFinancialCategories = () => {
     },
   });
 };
+
+// Re-export the income type category mapping hook for convenience
+export { useIncomeTypeCategoryMapping } from './useIncomeTypeCategoryMapping';

@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import {
   FormControl,
@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import { FinancialTransactionFormValues } from '../financialTransactionFormSchema';
 import { FinancialCategory } from '@/types/financial';
+import { useIncomeTypeCategoryMapping } from '@/hooks/useIncomeTypeCategoryMapping';
 
 interface CategoryFieldProps {
   form: UseFormReturn<FinancialTransactionFormValues>;
@@ -25,22 +26,9 @@ interface CategoryFieldProps {
   residents?: any[];
 }
 
-// Mapping between income type codes and financial category names
-const INCOME_TYPE_TO_CATEGORY_MAPPING: Record<string, string[]> = {
-  'ssi': ['Government Funding'],
-  'ssdi': ['Government Funding'],
-  'medicaid': ['Insurance Payments'],
-  'medicare': ['Insurance Payments'],
-  'private_insurance': ['Insurance Payments'],
-  'private_pay': ['Resident Fees'],
-  'grant': ['Government Funding', 'Donations'],
-  'waiver': ['Government Funding'],
-  'veteran_benefits': ['Government Funding'],
-  'other': ['Additional Services', 'Donations']
-};
-
 export function CategoryField({ form, categories, watchTransactionType, residents = [] }: CategoryFieldProps) {
   const watchResidentId = form.watch('resident_id');
+  const { data: incomeTypeMappings = [], isLoading: isMappingsLoading } = useIncomeTypeCategoryMapping();
   
   // Find the selected resident
   const selectedResident = residents.find(resident => resident.id === watchResidentId);
@@ -50,8 +38,24 @@ export function CategoryField({ form, categories, watchTransactionType, resident
     watchResidentId,
     selectedResident,
     totalCategories: categories.length,
-    residents: residents.length
+    residents: residents.length,
+    incomeTypeMappings: incomeTypeMappings.length
   });
+
+  // Create a mapping from income types to category names using the database data
+  const incomeTypeToCategoryMapping = useMemo(() => {
+    const mapping: Record<string, string[]> = {};
+    
+    incomeTypeMappings.forEach(({ income_type, category_name }) => {
+      if (!mapping[income_type]) {
+        mapping[income_type] = [];
+      }
+      mapping[income_type].push(category_name);
+    });
+    
+    console.log('Dynamic income type to category mapping:', mapping);
+    return mapping;
+  }, [incomeTypeMappings]);
 
   // Filter categories based on transaction type and resident's income types
   const getFilteredCategories = () => {
@@ -64,14 +68,14 @@ export function CategoryField({ form, categories, watchTransactionType, resident
     console.log('Categories after transaction type filter:', filteredCategories);
 
     // If transaction type is income and a resident is selected, filter by resident's income types
-    if (watchTransactionType === 'income' && selectedResident && selectedResident.income_types) {
+    if (watchTransactionType === 'income' && selectedResident && selectedResident.income_types && !isMappingsLoading) {
       console.log('Selected resident income types:', selectedResident.income_types);
       
       // Get all allowed category names based on the resident's income types
       const allowedCategoryNames: string[] = [];
       
       selectedResident.income_types.forEach((incomeType: string) => {
-        const mappedCategories = INCOME_TYPE_TO_CATEGORY_MAPPING[incomeType] || [];
+        const mappedCategories = incomeTypeToCategoryMapping[incomeType] || [];
         allowedCategoryNames.push(...mappedCategories);
       });
       
@@ -94,7 +98,7 @@ export function CategoryField({ form, categories, watchTransactionType, resident
 
   // Clear category when resident changes and transaction type is income
   useEffect(() => {
-    if (watchTransactionType === 'income' && watchResidentId) {
+    if (watchTransactionType === 'income' && watchResidentId && !isMappingsLoading) {
       const currentCategory = form.getValues('category');
       const isCurrentCategoryValid = filteredCategories.some(cat => cat.name === currentCategory);
       
@@ -102,7 +106,7 @@ export function CategoryField({ form, categories, watchTransactionType, resident
         form.setValue('category', '');
       }
     }
-  }, [watchResidentId, watchTransactionType, form, filteredCategories]);
+  }, [watchResidentId, watchTransactionType, form, filteredCategories, isMappingsLoading]);
 
   return (
     <FormField
@@ -126,7 +130,7 @@ export function CategoryField({ form, categories, watchTransactionType, resident
                 ))
               ) : (
                 <SelectItem value="no-categories-available" disabled>
-                  No categories available
+                  {isMappingsLoading ? 'Loading categories...' : 'No categories available'}
                 </SelectItem>
               )}
             </SelectContent>
