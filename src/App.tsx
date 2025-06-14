@@ -11,6 +11,7 @@ import NursingHomes from "./pages/NursingHomes";
 import Residents from "./pages/Residents";
 import Finances from "./pages/Finances";
 import Reports from "./pages/Reports";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -48,10 +49,7 @@ const App = () => (
           } />
           <Route path="/settings" element={
             <DashboardLayout>
-              <div className="text-center py-12">
-                <h1 className="text-2xl font-bold mb-4">System Settings</h1>
-                <p className="text-muted-foreground">Configure system preferences and security settings.</p>
-              </div>
+              <Settings />
             </DashboardLayout>
           } />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
