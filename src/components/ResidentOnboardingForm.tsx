@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ResidentFormData } from '@/types/resident';
@@ -36,15 +37,10 @@ export function ResidentOnboardingForm({ onSubmit, onCancel, preSelectedNursingH
     emergency_contact_name: '',
     emergency_contact_phone: '',
     emergency_contact_relationship: '',
-    medical_conditions: [],
-    medications: [],
-    dietary_restrictions: [],
     mobility_level: 'independent',
     care_level: 'independent',
     admission_date: new Date().toISOString().split('T')[0],
     room_number: '',
-    insurance_provider: '',
-    insurance_policy_number: '',
     notes: '',
     status: 'active',
     income_types: [],
