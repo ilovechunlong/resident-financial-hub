@@ -1,41 +1,37 @@
 
-import { Building2, Users, DollarSign, FileText, PlusCircle, TrendingUp } from "lucide-react"
+import { Building2, Users, DollarSign, FileText, PlusCircle, TrendingUp, LoaderIcon } from "lucide-react"
 import { StatCard } from "@/components/StatCard"
 import { QuickActionCard } from "@/components/QuickActionCard"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { useDashboardStats } from "@/hooks/useDashboardStats"
+import { useRecentActivity } from "@/hooks/useRecentActivity"
+import { useFacilityOverview } from "@/hooks/useFacilityOverview"
 
 export default function Dashboard() {
-  // Mock data - in real app this would come from your backend
-  const stats = {
-    nursingHomes: 3,
-    totalResidents: 84,
-    activeResidents: 78,
-    monthlyRevenue: 245600,
-    outstandingPayments: 12400
+  const { data: stats, isLoading: statsLoading, error: statsError } = useDashboardStats();
+  const { data: recentActivity, isLoading: activityLoading } = useRecentActivity();
+  const { data: facilities, isLoading: facilitiesLoading } = useFacilityOverview();
+
+  if (statsLoading) {
+    return (
+      <div className="space-y-8 animate-fade-in">
+        <div className="flex items-center justify-center h-64">
+          <LoaderIcon className="h-8 w-8 animate-spin text-healthcare-primary" />
+          <span className="ml-2 text-muted-foreground">Loading dashboard...</span>
+        </div>
+      </div>
+    );
   }
 
-  const recentActivity = [
-    {
-      type: "resident_added",
-      message: "New resident John Smith onboarded to Sunset Manor",
-      time: "2 hours ago"
-    },
-    {
-      type: "payment_received",
-      message: "$4,200 SSI payment received for resident Mary Johnson",
-      time: "4 hours ago"
-    },
-    {
-      type: "expense_logged",
-      message: "Monthly rent expense logged for Greenwood Care - $8,500",
-      time: "1 day ago"
-    },
-    {
-      type: "report_generated",
-      message: "Annual financial report generated for Sunset Manor",
-      time: "2 days ago"
-    }
-  ]
+  if (statsError) {
+    return (
+      <div className="space-y-8 animate-fade-in">
+        <div className="text-center py-8">
+          <p className="text-red-600">Error loading dashboard data. Please try again.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -51,30 +47,30 @@ export default function Dashboard() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Nursing Homes"
-          value={stats.nursingHomes}
+          value={stats?.nursingHomes || 0}
           icon={Building2}
           description="Active facilities"
         />
         <StatCard
           title="Total Residents"
-          value={stats.totalResidents}
+          value={stats?.totalResidents || 0}
           icon={Users}
-          description={`${stats.activeResidents} active, ${stats.totalResidents - stats.activeResidents} discharged`}
-          trend={{ value: 8, isPositive: true }}
+          description={`${stats?.activeResidents || 0} active, ${(stats?.totalResidents || 0) - (stats?.activeResidents || 0)} discharged`}
+          trend={stats?.totalResidents ? { value: 8, isPositive: true } : undefined}
         />
         <StatCard
           title="Monthly Revenue"
-          value={`$${stats.monthlyRevenue.toLocaleString()}`}
+          value={`$${(stats?.monthlyRevenue || 0).toLocaleString()}`}
           icon={DollarSign}
           description="Combined facility income"
-          trend={{ value: 12, isPositive: true }}
+          trend={stats?.monthlyRevenue ? { value: 12, isPositive: true } : undefined}
         />
         <StatCard
           title="Outstanding Payments"
-          value={`$${stats.outstandingPayments.toLocaleString()}`}
+          value={`$${(stats?.outstandingPayments || 0).toLocaleString()}`}
           icon={TrendingUp}
           description="Pending collections"
-          trend={{ value: 5, isPositive: false }}
+          trend={stats?.outstandingPayments ? { value: 5, isPositive: false } : undefined}
         />
       </div>
 
@@ -87,14 +83,14 @@ export default function Dashboard() {
             description="Register a new care facility in the system"
             icon={Building2}
             buttonText="Add Facility"
-            href="/nursing-homes/new"
+            href="/nursing-homes"
           />
           <QuickActionCard
             title="Onboard Resident"
             description="Add a new resident to any of your facilities"
             icon={PlusCircle}
             buttonText="Onboard Resident"
-            href="/residents/new"
+            href="/residents"
           />
           <QuickActionCard
             title="Generate Report"
@@ -117,24 +113,37 @@ export default function Dashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {recentActivity.map((activity, index) => (
-                  <div key={index} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                    <div className={`p-1 rounded-full ${
-                      activity.type === 'resident_added' ? 'bg-green-100 text-green-600' :
-                      activity.type === 'payment_received' ? 'bg-blue-100 text-blue-600' :
-                      activity.type === 'expense_logged' ? 'bg-orange-100 text-orange-600' :
-                      'bg-purple-100 text-purple-600'
-                    }`}>
-                      <div className="w-2 h-2 rounded-full bg-current" />
+              {activityLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <LoaderIcon className="h-6 w-6 animate-spin text-healthcare-primary" />
+                  <span className="ml-2 text-muted-foreground">Loading activity...</span>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {recentActivity && recentActivity.length > 0 ? (
+                    recentActivity.map((activity) => (
+                      <div key={activity.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                        <div className={`p-1 rounded-full ${
+                          activity.type === 'resident_added' ? 'bg-green-100 text-green-600' :
+                          activity.type === 'payment_received' ? 'bg-blue-100 text-blue-600' :
+                          activity.type === 'expense_logged' ? 'bg-orange-100 text-orange-600' :
+                          'bg-purple-100 text-purple-600'
+                        }`}>
+                          <div className="w-2 h-2 rounded-full bg-current" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground">{activity.message}</p>
+                          <p className="text-xs text-muted-foreground">{activity.time}</p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No recent activity found
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground">{activity.message}</p>
-                      <p className="text-xs text-muted-foreground">{activity.time}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -149,35 +158,38 @@ export default function Dashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center p-3 bg-gradient-card rounded-lg">
-                  <div>
-                    <p className="font-medium">Sunset Manor</p>
-                    <p className="text-sm text-muted-foreground">32 residents</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-green-600">98% occupancy</p>
-                  </div>
+              {facilitiesLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <LoaderIcon className="h-6 w-6 animate-spin text-healthcare-primary" />
+                  <span className="ml-2 text-muted-foreground">Loading facilities...</span>
                 </div>
-                <div className="flex justify-between items-center p-3 bg-gradient-card rounded-lg">
-                  <div>
-                    <p className="font-medium">Greenwood Care</p>
-                    <p className="text-sm text-muted-foreground">28 residents</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-green-600">93% occupancy</p>
-                  </div>
+              ) : (
+                <div className="space-y-4">
+                  {facilities && facilities.length > 0 ? (
+                    facilities.map((facility) => (
+                      <div key={facility.id} className="flex justify-between items-center p-3 bg-gradient-card rounded-lg">
+                        <div>
+                          <p className="font-medium">{facility.name}</p>
+                          <p className="text-sm text-muted-foreground">{facility.currentResidents} residents</p>
+                        </div>
+                        <div className="text-right">
+                          <p className={`text-sm font-medium ${
+                            facility.occupancyRate >= 90 ? 'text-green-600' :
+                            facility.occupancyRate >= 75 ? 'text-yellow-600' :
+                            'text-red-600'
+                          }`}>
+                            {facility.occupancyRate}% occupancy
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No facilities found
+                    </div>
+                  )}
                 </div>
-                <div className="flex justify-between items-center p-3 bg-gradient-card rounded-lg">
-                  <div>
-                    <p className="font-medium">Harmony Heights</p>
-                    <p className="text-sm text-muted-foreground">18 residents</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-yellow-600">75% occupancy</p>
-                  </div>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </div>
