@@ -25,6 +25,20 @@ interface CategoryFieldProps {
   residents?: any[];
 }
 
+// Mapping between income type codes and financial category names
+const INCOME_TYPE_TO_CATEGORY_MAPPING: Record<string, string[]> = {
+  'ssi': ['Government Funding'],
+  'ssdi': ['Government Funding'],
+  'medicaid': ['Insurance Payments'],
+  'medicare': ['Insurance Payments'],
+  'private_insurance': ['Insurance Payments'],
+  'private_pay': ['Resident Fees'],
+  'grant': ['Government Funding', 'Donations'],
+  'waiver': ['Government Funding'],
+  'veteran_benefits': ['Government Funding'],
+  'other': ['Additional Services', 'Donations']
+};
+
 export function CategoryField({ form, categories, watchTransactionType, residents = [] }: CategoryFieldProps) {
   const watchResidentId = form.watch('resident_id');
   
@@ -53,8 +67,16 @@ export function CategoryField({ form, categories, watchTransactionType, resident
     if (watchTransactionType === 'income' && selectedResident && selectedResident.income_types) {
       console.log('Selected resident income types:', selectedResident.income_types);
       
+      // Get all allowed category names based on the resident's income types
+      const allowedCategoryNames = selectedResident.income_types.reduce((acc: string[], incomeType: string) => {
+        const mappedCategories = INCOME_TYPE_TO_CATEGORY_MAPPING[incomeType] || [];
+        return [...acc, ...mappedCategories];
+      }, []);
+      
+      console.log('Allowed category names based on income types:', allowedCategoryNames);
+      
       filteredCategories = filteredCategories.filter(category => 
-        selectedResident.income_types.includes(category.name)
+        allowedCategoryNames.includes(category.name)
       );
       
       console.log('Categories after income types filter:', filteredCategories);
