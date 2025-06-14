@@ -96,7 +96,9 @@ export const useRecentActivity = () => {
         console.error('Error fetching recent reports:', reportsError);
       } else if (recentReports) {
         recentReports.forEach(report => {
-          const reportType = report.report_data?.report_type || 'Report';
+          // Type assertion to safely access report_type
+          const reportData = report.report_data as { report_type?: string } | null;
+          const reportType = reportData?.report_type || 'Report';
           activities.push({
             id: `report-${report.id}`,
             type: 'report_generated',
