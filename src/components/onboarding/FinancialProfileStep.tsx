@@ -1,6 +1,6 @@
 
 import { useIncomeTypeCategoryMapping } from '@/hooks/useIncomeTypeCategoryMapping';
-import { formatIncomeTypes, formatIncomeTypeLabel } from './financial/IncomeTypeFormatter';
+import { formatIncomeTypes } from './financial/IncomeTypeFormatter';
 import { IncomeTypesGrid } from './financial/IncomeTypesGrid';
 import { CustomIncomeTypeForm } from './financial/CustomIncomeTypeForm';
 import { SelectedIncomeTypes } from './financial/SelectedIncomeTypes';
@@ -13,8 +13,12 @@ interface FinancialProfileStepProps {
 export function FinancialProfileStep({ formData, updateFormData }: FinancialProfileStepProps) {
   const { data: incomeTypeMappings = [], isLoading } = useIncomeTypeCategoryMapping();
 
-  // Get formatted income types from the database
+  console.log('Income type mappings from database:', incomeTypeMappings);
+
+  // Extract unique income types from the mappings and format them
   const incomeTypes = formatIncomeTypes(incomeTypeMappings);
+  
+  console.log('Formatted income types:', incomeTypes);
 
   const handleIncomeTypeChange = (incomeTypeId: string, checked: boolean) => {
     const currentTypes = formData.income_types || [];

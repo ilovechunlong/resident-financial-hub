@@ -1,4 +1,6 @@
 
+import { IncomeTypeCategoryMapping } from '@/types/financial';
+
 export const formatIncomeTypeLabel = (type: string): string => {
   switch (type) {
     case 'ssi':
@@ -53,12 +55,24 @@ export const getIncomeTypeDescription = (type: string): string => {
   }
 };
 
-export const formatIncomeTypes = (incomeTypeMappings: Array<{ income_type: string }>) => {
-  return Array.from(
+export const formatIncomeTypes = (incomeTypeMappings: IncomeTypeCategoryMapping[]) => {
+  console.log('Raw income type mappings:', incomeTypeMappings);
+  
+  // Extract unique income types from the mappings
+  const uniqueIncomeTypes = Array.from(
     new Set(incomeTypeMappings.map(mapping => mapping.income_type))
-  ).map(incomeType => ({
+  );
+  
+  console.log('Unique income types:', uniqueIncomeTypes);
+  
+  // Format them for display
+  const formattedTypes = uniqueIncomeTypes.map(incomeType => ({
     id: incomeType,
     label: formatIncomeTypeLabel(incomeType),
     description: getIncomeTypeDescription(incomeType)
   }));
+  
+  console.log('Formatted income types:', formattedTypes);
+  
+  return formattedTypes;
 };
