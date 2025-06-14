@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import {
@@ -32,17 +31,33 @@ export function BasicTransactionFields({ form, categories, watchTransactionType,
   // Find the selected resident
   const selectedResident = residents.find(resident => resident.id === watchResidentId);
   
+  console.log('Debug BasicTransactionFields:', {
+    watchTransactionType,
+    watchResidentId,
+    selectedResident,
+    totalCategories: categories.length,
+    residents: residents.length
+  });
+
   // Filter categories based on transaction type and resident's income types
   const getFilteredCategories = () => {
+    console.log('All categories:', categories);
+    
     let filteredCategories = categories.filter(
       category => category.transaction_type === watchTransactionType
     );
+    
+    console.log('Categories after transaction type filter:', filteredCategories);
 
     // If transaction type is income and a resident is selected, filter by resident's income types
     if (watchTransactionType === 'income' && selectedResident && selectedResident.income_types) {
+      console.log('Selected resident income types:', selectedResident.income_types);
+      
       filteredCategories = filteredCategories.filter(category => 
         selectedResident.income_types.includes(category.name)
       );
+      
+      console.log('Categories after income types filter:', filteredCategories);
     }
 
     return filteredCategories;
@@ -99,11 +114,17 @@ export function BasicTransactionFields({ form, categories, watchTransactionType,
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                {filteredCategories.map((category) => (
-                  <SelectItem key={category.id} value={category.name}>
-                    {category.name}
+                {filteredCategories.length > 0 ? (
+                  filteredCategories.map((category) => (
+                    <SelectItem key={category.id} value={category.name}>
+                      {category.name}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="" disabled>
+                    No categories available
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
             <FormMessage />
