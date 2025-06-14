@@ -78,6 +78,95 @@ export type Database = {
         }
         Relationships: []
       }
+      residents: {
+        Row: {
+          admission_date: string
+          care_level: string
+          created_at: string
+          date_of_birth: string
+          dietary_restrictions: string[] | null
+          emergency_contact_name: string
+          emergency_contact_phone: string
+          emergency_contact_relationship: string
+          first_name: string
+          gender: string
+          id: string
+          insurance_policy_number: string | null
+          insurance_provider: string | null
+          last_name: string
+          medical_conditions: string[] | null
+          medications: string[] | null
+          mobility_level: string
+          monthly_fee: number
+          notes: string | null
+          nursing_home_id: string
+          phone_number: string | null
+          room_number: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admission_date: string
+          care_level: string
+          created_at?: string
+          date_of_birth: string
+          dietary_restrictions?: string[] | null
+          emergency_contact_name: string
+          emergency_contact_phone: string
+          emergency_contact_relationship: string
+          first_name: string
+          gender: string
+          id?: string
+          insurance_policy_number?: string | null
+          insurance_provider?: string | null
+          last_name: string
+          medical_conditions?: string[] | null
+          medications?: string[] | null
+          mobility_level: string
+          monthly_fee: number
+          notes?: string | null
+          nursing_home_id: string
+          phone_number?: string | null
+          room_number?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admission_date?: string
+          care_level?: string
+          created_at?: string
+          date_of_birth?: string
+          dietary_restrictions?: string[] | null
+          emergency_contact_name?: string
+          emergency_contact_phone?: string
+          emergency_contact_relationship?: string
+          first_name?: string
+          gender?: string
+          id?: string
+          insurance_policy_number?: string | null
+          insurance_provider?: string | null
+          last_name?: string
+          medical_conditions?: string[] | null
+          medications?: string[] | null
+          mobility_level?: string
+          monthly_fee?: number
+          notes?: string | null
+          nursing_home_id?: string
+          phone_number?: string | null
+          room_number?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "residents_nursing_home_id_fkey"
+            columns: ["nursing_home_id"]
+            isOneToOne: false
+            referencedRelation: "nursing_homes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

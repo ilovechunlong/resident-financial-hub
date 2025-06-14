@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,6 +8,7 @@ import { DashboardLayout } from "./components/DashboardLayout";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import NursingHomes from "./pages/NursingHomes";
+import Residents from "./pages/Residents";
 
 const queryClient = new QueryClient();
 
@@ -29,10 +31,7 @@ const App = () => (
           } />
           <Route path="/residents" element={
             <DashboardLayout>
-              <div className="text-center py-12">
-                <h1 className="text-2xl font-bold mb-4">Resident Management</h1>
-                <p className="text-muted-foreground">Onboard and manage residents across all facilities.</p>
-              </div>
+              <Residents />
             </DashboardLayout>
           } />
           <Route path="/finances" element={
