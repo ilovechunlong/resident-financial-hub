@@ -27,7 +27,7 @@ export function useNursingHomes() {
         return;
       }
 
-      setNursingHomes(data || []);
+      setNursingHomes((data as NursingHome[]) || []);
       console.log('Fetched nursing homes:', data);
     } catch (error) {
       console.error('Error in fetchNursingHomes:', error);
@@ -63,7 +63,7 @@ export function useNursingHomes() {
         return;
       }
 
-      setNursingHomes(prev => [newHome, ...prev]);
+      setNursingHomes(prev => [newHome as NursingHome, ...prev]);
       toast({
         title: 'Success',
         description: 'Nursing home added successfully',
@@ -99,7 +99,7 @@ export function useNursingHomes() {
       }
 
       setNursingHomes(prev => prev.map(home => 
-        home.id === id ? updatedHome : home
+        home.id === id ? updatedHome as NursingHome : home
       ));
       toast({
         title: 'Success',
