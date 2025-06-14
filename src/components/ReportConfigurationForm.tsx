@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCreateReportConfiguration } from '@/hooks/useReports';
+import { ReportFormData } from '@/types/report';
 
 const reportFormSchema = z.object({
   name: z.string().min(1, 'Report name is required'),
@@ -51,7 +52,15 @@ export function ReportConfigurationForm({ onSuccess }: ReportConfigurationFormPr
 
   const onSubmit = async (values: ReportFormValues) => {
     try {
-      await createReportMutation.mutateAsync(values);
+      // Transform form values to match ReportFormData type
+      const reportData: ReportFormData = {
+        name: values.name,
+        report_type: values.report_type,
+        ...(values.date_range_start && { date_range_start: values.date_range_start }),
+        ...(values.date_range_end && { date_range_end: values.date_range_end }),
+      };
+      
+      await createReportMutation.mutateAsync(reportData);
       form.reset();
       onSuccess?.();
     } catch (error) {
