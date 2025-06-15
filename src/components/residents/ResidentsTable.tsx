@@ -3,7 +3,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Edit, Trash2 } from 'lucide-react';
 import { Resident } from '@/types/resident';
-import { useIncomeTypeCategoryMapping } from '@/hooks/useIncomeTypeCategoryMapping';
 
 interface ResidentsTableProps {
   residents: Resident[];
@@ -20,8 +19,6 @@ export function ResidentsTable({
   searchTerm, 
   statusFilter 
 }: ResidentsTableProps) {
-  const { data: incomeTypeMappings, isLoading: isMappingsLoading } = useIncomeTypeCategoryMapping();
-
   const getStatusBadge = (status: string) => {
     const variants: { [key: string]: 'default' | 'secondary' | 'destructive' | 'outline' } = {
       active: 'default',
@@ -36,19 +33,7 @@ export function ResidentsTable({
     if (!incomeTypes || incomeTypes.length === 0) {
       return 'Not specified';
     }
-    
-    if (isMappingsLoading) {
-      return 'Loading...';
-    }
-
-    if (!incomeTypeMappings) {
-      return 'Error loading income types';
-    }
-
-    return incomeTypes.map(typeId => {
-      const mapping = incomeTypeMappings.find(m => m.id === typeId);
-      return mapping ? mapping.display_label : typeId;
-    }).join(', ');
+    return incomeTypes.join(', ');
   };
 
   const filteredResidents = residents.filter(resident => {
