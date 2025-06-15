@@ -26,9 +26,7 @@ export function ReviewStep({ formData, nursingHomes }: ReviewStepProps) {
   };
 
   const getDisplayName = (typeId: string) => {
-    if (typeId.startsWith('custom_')) {
-      return typeId.replace('custom_', '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-    }
+    // Custom income types are no longer supported, so no special formatting is needed.
     return typeId;
   };
 

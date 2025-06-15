@@ -1,9 +1,6 @@
-
 import React from 'react';
 import { useFinancialCategories } from '@/hooks/useFinancialTransactions';
 import { IncomeTypesGrid } from '@/components/onboarding/financial/IncomeTypesGrid';
-import { CustomIncomeTypeForm } from '@/components/onboarding/financial/CustomIncomeTypeForm';
-import { SelectedIncomeTypes } from '@/components/onboarding/financial/SelectedIncomeTypes';
 import { ResidentFormData } from '@/types/resident';
 
 interface FinancialInformationFieldsProps {
@@ -33,31 +30,6 @@ export function FinancialInformationFields({ formData, setFormData }: FinancialI
     }
     
     setFormData(prev => ({ ...prev, income_types: updatedTypes }));
-  };
-
-  const addCustomIncomeType = (customIncomeType: string) => {
-    const currentTypes = formData.income_types || [];
-    const customId = `custom_${customIncomeType.toLowerCase().replace(/\s+/g, '_')}`;
-    
-    if (!currentTypes.includes(customId)) {
-      setFormData(prev => ({ ...prev, income_types: [...currentTypes, customId] }));
-    }
-  };
-
-  const removeCustomIncomeType = (typeId: string) => {
-    const currentTypes = formData.income_types || [];
-    setFormData(prev => ({ ...prev, income_types: currentTypes.filter((type: string) => type !== typeId) }));
-  };
-
-  const getDisplayName = (typeId: string) => {
-    const standardType = incomeTypes.find(type => type.id === typeId);
-    if (standardType) return standardType.label;
-    
-    if (typeId.startsWith('custom_')) {
-      return typeId.replace('custom_', '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-    }
-    
-    return typeId;
   };
 
   if (isLoading) {
@@ -94,14 +66,6 @@ export function FinancialInformationFields({ formData, setFormData }: FinancialI
           incomeTypes={incomeTypes || []}
           selectedTypes={formData.income_types || []}
           onSelectionChange={handleIncomeTypeChange}
-        />
-
-        <CustomIncomeTypeForm onAddCustomType={addCustomIncomeType} />
-
-        <SelectedIncomeTypes
-          selectedTypes={formData.income_types || []}
-          getDisplayName={getDisplayName}
-          onRemoveCustomType={removeCustomIncomeType}
         />
       </div>
     </div>

@@ -63,17 +63,9 @@ export function ResidentOnboardingForm({ onSubmit, onCancel, preSelectedNursingH
     if (validateStep(currentStep, formData)) {
       const { social_security_number, ...submitData } = formData;
       
-      const processedIncomeTypes = (submitData.income_types || []).map(type => {
-        if (type.startsWith('custom_')) {
-          return type.replace('custom_', '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-        }
-        return type;
-      });
-
       // Add SSN to notes if provided, since we don't have a separate field in the database
       const finalData = {
         ...submitData,
-        income_types: processedIncomeTypes,
         notes: `${submitData.notes ? submitData.notes + '\n\n' : ''}${social_security_number ? `SSN: ${social_security_number}` : ''}`
       };
       onSubmit(finalData);

@@ -1,7 +1,5 @@
 import { useFinancialCategories } from '@/hooks/useFinancialTransactions';
 import { IncomeTypesGrid } from './financial/IncomeTypesGrid';
-import { CustomIncomeTypeForm } from './financial/CustomIncomeTypeForm';
-import { SelectedIncomeTypes } from './financial/SelectedIncomeTypes';
 
 interface FinancialProfileStepProps {
   formData: any;
@@ -35,35 +33,6 @@ export function FinancialProfileStep({ formData, updateFormData }: FinancialProf
     }
     
     updateFormData({ income_types: updatedTypes });
-  };
-
-  const addCustomIncomeType = (customIncomeType: string) => {
-    const currentTypes = formData.income_types || [];
-    const customId = `custom_${customIncomeType.toLowerCase().replace(/\s+/g, '_')}`;
-    
-    if (!currentTypes.includes(customId)) {
-      updateFormData({ 
-        income_types: [...currentTypes, customId] 
-      });
-    }
-  };
-
-  const removeCustomIncomeType = (typeId: string) => {
-    const currentTypes = formData.income_types || [];
-    updateFormData({ 
-      income_types: currentTypes.filter((type: string) => type !== typeId) 
-    });
-  };
-
-  const getDisplayName = (typeId: string) => {
-    const standardType = incomeTypes.find(type => type.id === typeId);
-    if (standardType) return standardType.label;
-    
-    if (typeId.startsWith('custom_')) {
-      return typeId.replace('custom_', '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-    }
-    
-    return typeId;
   };
 
   if (isLoading) {
@@ -103,7 +72,7 @@ export function FinancialProfileStep({ formData, updateFormData }: FinancialProf
         {!isLoading && incomeTypes.length === 0 && (
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-4">
             <p className="text-amber-800 text-sm">
-              No resident income categories found. Please add a custom one below, or configure them in the application settings.
+              No resident income categories found. Please configure them in the application settings.
             </p>
           </div>
         )}
@@ -114,14 +83,6 @@ export function FinancialProfileStep({ formData, updateFormData }: FinancialProf
           incomeTypes={incomeTypes}
           selectedTypes={formData.income_types || []}
           onSelectionChange={handleIncomeTypeChange}
-        />
-
-        <CustomIncomeTypeForm onAddCustomType={addCustomIncomeType} />
-
-        <SelectedIncomeTypes
-          selectedTypes={formData.income_types || []}
-          getDisplayName={getDisplayName}
-          onRemoveCustomType={removeCustomIncomeType}
         />
       </div>
 
