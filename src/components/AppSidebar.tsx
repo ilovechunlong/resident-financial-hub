@@ -48,12 +48,12 @@ const menuItems = [
 const quickActions = [
   {
     title: "Add Nursing Home",
-    url: "/nursing-homes/new",
+    url: "/nursing-homes/",
     icon: Building2,
   },
   {
     title: "Onboard Resident",
-    url: "/residents/new",
+    url: "/residents/",
     icon: PlusCircle,
   },
 ]
