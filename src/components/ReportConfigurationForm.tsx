@@ -26,7 +26,7 @@ import { ReportFormData } from '@/types/report';
 
 const reportFormSchema = z.object({
   name: z.string().min(1, 'Report name is required'),
-  report_type: z.enum(['financial_summary', 'transaction_report', 'nursing_home_report', 'resident_report']),
+  report_type: z.enum(['financial_summary', 'transaction_report', 'nursing_home_report', 'resident_report', 'resident_annual_financial_summary']),
   date_range_start: z.string().optional(),
   date_range_end: z.string().optional(),
 });
@@ -73,6 +73,7 @@ export function ReportConfigurationForm({ onSuccess }: ReportConfigurationFormPr
     { value: 'transaction_report', label: 'Transaction Report' },
     { value: 'nursing_home_report', label: 'Nursing Home Report' },
     { value: 'resident_report', label: 'Resident Report' },
+    { value: 'resident_annual_financial_summary', label: 'Resident Annual Financial Summary' },
   ];
 
   return (

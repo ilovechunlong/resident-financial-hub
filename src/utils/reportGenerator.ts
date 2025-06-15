@@ -1,4 +1,3 @@
-
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -41,6 +40,10 @@ export class ReportGenerator {
         case 'resident_report':
           data = await this.getResidentData();
           summary = this.calculateResidentSummary(data);
+          break;
+        case 'resident_annual_financial_summary':
+          data = await this.getResidentAnnualFinancialSummaryData(dateRange);
+          summary = this.calculateResidentAnnualFinancialSummary(data);
           break;
         default:
           throw new Error(`Unknown report type: ${reportType}`);
@@ -107,6 +110,61 @@ export class ReportGenerator {
     return data || [];
   }
 
+  private static async getResidentAnnualFinancialSummaryData(dateRange?: { start?: string; end?: string }) {
+    let transactionQuery = supabase
+      .from('financial_transactions')
+      .select('*')
+      .in('transaction_type', ['income', 'expense'])
+      .not('resident_id', 'is', null);
+
+    if (dateRange?.start) {
+      transactionQuery = transactionQuery.gte('transaction_date', dateRange.start);
+    }
+    if (dateRange?.end) {
+      transactionQuery = transactionQuery.lte('transaction_date', dateRange.end);
+    }
+
+    const { data: transactions, error: transactionsError } = await transactionQuery;
+    if (transactionsError) throw transactionsError;
+
+    const { data: residents, error: residentsError } = await supabase
+      .from('residents')
+      .select('id, first_name, last_name');
+    if (residentsError) throw residentsError;
+
+    if (!transactions || !residents) {
+      return [];
+    }
+
+    const transactionsByResident = transactions.reduce((acc, t) => {
+      if (t.resident_id) {
+        if (!acc[t.resident_id]) {
+          acc[t.resident_id] = [];
+        }
+        acc[t.resident_id].push(t);
+      }
+      return acc;
+    }, {} as Record<string, any[]>);
+
+    return residents.map(resident => {
+      const residentTransactions = transactionsByResident[resident.id] || [];
+      const totalIncome = residentTransactions
+        .filter(t => t.transaction_type === 'income')
+        .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+      const totalExpenses = residentTransactions
+        .filter(t => t.transaction_type === 'expense')
+        .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+      
+      return {
+        ...resident,
+        totalIncome,
+        totalExpenses,
+        netAmount: totalIncome - totalExpenses,
+        transactionCount: residentTransactions.length,
+      };
+    });
+  }
+
   private static calculateFinancialSummary(data: any[]) {
     const totalIncome = data
       .filter(t => t.transaction_type === 'income')
@@ -152,6 +210,13 @@ export class ReportGenerator {
     return {
       totalResidents: data.length,
       careLevelBreakdown: activeCareLevel,
+      generatedAt: new Date().toISOString()
+    };
+  }
+
+  private static calculateResidentAnnualFinancialSummary(data: any[]) {
+    return {
+      totalResidents: data.length,
       generatedAt: new Date().toISOString()
     };
   }
@@ -249,6 +314,8 @@ export class ReportGenerator {
         return ['Name', 'City', 'State', 'Capacity', 'Current Residents', 'Monthly Rate', 'Status'];
       case 'resident_report':
         return ['Name', 'Nursing Home', 'Room', 'Care Level', 'Admission Date', 'Status'];
+      case 'resident_annual_financial_summary':
+        return ['Resident Name', 'Transactions', 'Total Income', 'Total Expenses', 'Net Amount'];
       default:
         return [];
     }
@@ -285,6 +352,14 @@ export class ReportGenerator {
           format(new Date(item.admission_date), 'MMM dd, yyyy'),
           item.status
         ]);
+      case 'resident_annual_financial_summary':
+        return data.map(item => [
+          `${item.first_name} ${item.last_name}`,
+          item.transactionCount.toString(),
+          `$${item.totalIncome.toLocaleString()}`,
+          `$${item.totalExpenses.toLocaleString()}`,
+          `$${item.netAmount.toLocaleString()}`
+        ]);
       default:
         return [];
     }
@@ -302,6 +377,13 @@ export class ReportGenerator {
           3: { halign: 'right' }, // Capacity
           4: { halign: 'right' }, // Current Residents
           5: { halign: 'right' }, // Monthly Rate
+        };
+      case 'resident_annual_financial_summary':
+        return {
+          1: { halign: 'right' }, // Transactions
+          2: { halign: 'right' }, // Total Income
+          3: { halign: 'right' }, // Total Expenses
+          4: { halign: 'right' }, // Net Amount
         };
       default:
         return {};
@@ -354,6 +436,14 @@ export class ReportGenerator {
           'Emergency Contact': item.emergency_contact_name,
           'Emergency Phone': item.emergency_contact_phone,
           'Emergency Relationship': item.emergency_contact_relationship
+        }));
+      case 'resident_annual_financial_summary':
+        return data.map(item => ({
+          'Resident Name': `${item.first_name} ${item.last_name}`,
+          'Transaction Count': item.transactionCount,
+          'Total Income': item.totalIncome,
+          'Total Expenses': item.totalExpenses,
+          'Net Amount': item.netAmount,
         }));
       default:
         return data;
