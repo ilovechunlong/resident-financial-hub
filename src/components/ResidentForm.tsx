@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -63,7 +64,7 @@ export function ResidentForm({ resident, onSubmit, onCancel }: ResidentFormProps
     e.preventDefault();
 
     // Validate required fields
-    if (!formData.nursing_home_id || !formData.first_name || !formData.last_name || !formData.date_of_birth || !formData.admission_date) {
+    if (!formData.nursing_home_id || !formData.first_name || !formData.last_name || !formData.date_of_birth) {
       console.error('Required fields are missing');
       return;
     }

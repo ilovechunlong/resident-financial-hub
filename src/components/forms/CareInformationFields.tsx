@@ -15,7 +15,7 @@ export function CareInformationFields({ formData, setFormData }: CareInformation
       <h3 className="text-lg font-semibold mb-4">Care Information</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="mobility_level">Mobility Level *</Label>
+          <Label htmlFor="mobility_level">Mobility Level</Label>
           <Select value={formData.mobility_level} onValueChange={(value: any) => setFormData(prev => ({ ...prev, mobility_level: value }))}>
             <SelectTrigger>
               <SelectValue />
@@ -29,7 +29,7 @@ export function CareInformationFields({ formData, setFormData }: CareInformation
           </Select>
         </div>
         <div>
-          <Label htmlFor="care_level">Care Level *</Label>
+          <Label htmlFor="care_level">Care Level</Label>
           <Select value={formData.care_level} onValueChange={(value: any) => setFormData(prev => ({ ...prev, care_level: value }))}>
             <SelectTrigger>
               <SelectValue />
@@ -43,13 +43,12 @@ export function CareInformationFields({ formData, setFormData }: CareInformation
           </Select>
         </div>
         <div>
-          <Label htmlFor="admission_date">Admission Date *</Label>
+          <Label htmlFor="admission_date">Admission Date</Label>
           <Input
             id="admission_date"
             type="date"
             value={formData.admission_date}
             onChange={(e) => setFormData(prev => ({ ...prev, admission_date: e.target.value }))}
-            required
           />
         </div>
         <div>
