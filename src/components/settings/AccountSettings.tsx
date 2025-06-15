@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -17,6 +16,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const passwordFormSchema = z.object({
   currentPassword: z.string().min(1, 'Current password is required'),
@@ -31,6 +32,7 @@ type PasswordFormValues = z.infer<typeof passwordFormSchema>;
 
 export function AccountSettings() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [sessionTimeout, setSessionTimeout] = useState(30);
 
@@ -44,22 +46,43 @@ export function AccountSettings() {
   });
 
   const onPasswordSubmit = async (values: PasswordFormValues) => {
-    try {
-      // TODO: Implement actual password change logic
-      console.log('Password change:', values);
-      
+    if (!user?.email) {
+      toast({
+        title: "Error",
+        description: "User not found. Please log in again.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Verify current password by attempting to sign in.
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: values.currentPassword,
+    });
+    
+    if (signInError) {
+      passwordForm.setError("currentPassword", { type: "manual", message: "Incorrect current password." });
+      return;
+    }
+    
+    // If sign-in is successful, update the password.
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: values.newPassword,
+    });
+
+    if (updateError) {
+      toast({
+        title: "Error updating password",
+        description: updateError.message,
+        variant: "destructive",
+      });
+    } else {
       toast({
         title: "Password updated",
         description: "Your password has been changed successfully.",
       });
-      
       passwordForm.reset();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update password. Please try again.",
-        variant: "destructive",
-      });
     }
   };
 
@@ -126,7 +149,9 @@ export function AccountSettings() {
                 )}
               />
 
-              <Button type="submit">Update Password</Button>
+              <Button type="submit" disabled={passwordForm.formState.isSubmitting}>
+                {passwordForm.formState.isSubmitting ? 'Updating...' : 'Update Password'}
+              </Button>
             </form>
           </Form>
         </CardContent>
