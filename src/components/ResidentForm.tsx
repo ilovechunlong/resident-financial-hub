@@ -63,7 +63,7 @@ export function ResidentForm({ resident, onSubmit, onCancel }: ResidentFormProps
     e.preventDefault();
 
     // Validate required fields
-    if (!formData.first_name || !formData.last_name || !formData.date_of_birth || !formData.admission_date) {
+    if (!formData.nursing_home_id || !formData.first_name || !formData.last_name || !formData.date_of_birth || !formData.admission_date) {
       console.error('Required fields are missing');
       return;
     }
@@ -79,8 +79,8 @@ export function ResidentForm({ resident, onSubmit, onCancel }: ResidentFormProps
     onSubmit(finalFormData);
   };
 
-  // Don't allow form submission if no nursing homes are available
-  const canSubmit = nursingHomes && nursingHomes.length > 0;
+  // Don't allow form submission if no nursing homes are available or none is selected
+  const canSubmit = nursingHomes && nursingHomes.length > 0 && !!formData.nursing_home_id;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">

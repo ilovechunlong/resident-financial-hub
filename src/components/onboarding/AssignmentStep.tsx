@@ -19,13 +19,13 @@ export function AssignmentStep({ formData, updateFormData, nursingHomes }: Assig
       <div>
         <h3 className="text-lg font-semibold mb-4">Nursing Home Assignment</h3>
         <p className="text-sm text-gray-600 mb-6">
-          Select the nursing home where this resident will be placed and configure their care details (optional - can be completed later).
+          Select the nursing home where this resident will be placed and configure their care details.
         </p>
       </div>
 
       <div className="space-y-6">
         <div>
-          <Label htmlFor="nursing_home_id">Nursing Home</Label>
+          <Label htmlFor="nursing_home_id">Nursing Home *</Label>
           <Select
             value={formData.nursing_home_id}
             onValueChange={(value) => updateFormData({ nursing_home_id: value })}
