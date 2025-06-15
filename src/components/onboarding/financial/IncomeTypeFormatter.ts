@@ -1,4 +1,3 @@
-
 import { IncomeTypeCategoryMapping } from '@/types/financial';
 
 export const formatIncomeTypeLabel = (type: string): string => {
@@ -69,24 +68,13 @@ const defaultIncomeTypes = [
   'other'
 ];
 
-export const formatIncomeTypes = (incomeTypeMappings: IncomeTypeCategoryMapping[]) => {
+export const formatIncomeTypes = (incomeTypeMappings: IncomeTypeCategoryMapping[] | undefined) => {
   console.log('=== IncomeTypeFormatter Debug ===');
   console.log('Raw income type mappings received:', incomeTypeMappings);
-  console.log('Mappings array length:', incomeTypeMappings?.length || 0);
-  console.log('Mappings is array:', Array.isArray(incomeTypeMappings));
   
   if (!incomeTypeMappings || incomeTypeMappings.length === 0) {
-    console.log('No income type mappings found, using default income types');
-    
-    // Use default income types when database is empty
-    const defaultTypes = defaultIncomeTypes.map(incomeType => ({
-      id: incomeType,
-      label: formatIncomeTypeLabel(incomeType),
-      description: getIncomeTypeDescription(incomeType)
-    }));
-    
-    console.log('Default income types generated:', defaultTypes);
-    return defaultTypes;
+    console.log('No income type mappings found or data is empty, returning empty array.');
+    return [];
   }
   
   // Extract unique income types from the mappings
