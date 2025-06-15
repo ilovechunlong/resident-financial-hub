@@ -10,21 +10,10 @@ export const formatIncomeTypes = (incomeTypeMappings: IncomeTypeCategoryMapping[
     return [];
   }
   
-  const incomeTypeMap = new Map<string, { label: string; description: string }>();
-
-  incomeTypeMappings.forEach(mapping => {
-    if (!incomeTypeMap.has(mapping.income_type)) {
-      incomeTypeMap.set(mapping.income_type, {
-        label: mapping.display_label,
-        description: mapping.description,
-      });
-    }
-  });
-
-  const formattedTypes = Array.from(incomeTypeMap.entries()).map(([id, { label, description }]) => ({
-    id,
-    label,
-    description
+  const formattedTypes = incomeTypeMappings.map(mapping => ({
+    id: mapping.id,
+    label: mapping.display_label,
+    description: mapping.description
   }));
   
   console.log('Final formatted income types:', formattedTypes);

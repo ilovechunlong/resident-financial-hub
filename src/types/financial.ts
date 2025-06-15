@@ -27,8 +27,6 @@ export interface FinancialCategory {
 
 export interface IncomeTypeCategoryMapping {
   id: string;
-  income_type: string;
-  category_name: string;
   display_label: string;
   description: string;
   created_at: string;

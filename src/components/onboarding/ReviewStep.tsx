@@ -29,7 +29,7 @@ export function ReviewStep({ formData, nursingHomes }: ReviewStepProps) {
 
   const getDisplayName = (typeId: string) => {
     if (incomeTypeMappings) {
-      const mapping = incomeTypeMappings.find(m => m.income_type === typeId);
+      const mapping = incomeTypeMappings.find(m => m.id === typeId);
       if (mapping) {
         return mapping.display_label;
       }

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useMemo } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import {
@@ -46,11 +45,11 @@ export function CategoryField({ form, categories, watchTransactionType, resident
   const incomeTypeToCategoryMapping = useMemo(() => {
     const mapping: Record<string, string[]> = {};
     
-    incomeTypeMappings.forEach(({ income_type, category_name }) => {
-      if (!mapping[income_type]) {
-        mapping[income_type] = [];
+    incomeTypeMappings.forEach(({ id, display_label }) => {
+      if (!mapping[id]) {
+        mapping[id] = [];
       }
-      mapping[income_type].push(category_name);
+      mapping[id].push(display_label);
     });
     
     console.log('Dynamic income type to category mapping:', mapping);
