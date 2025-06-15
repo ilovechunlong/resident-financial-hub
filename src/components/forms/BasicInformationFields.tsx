@@ -32,7 +32,7 @@ export function BasicInformationFields({ formData, setFormData, nursingHomes }: 
       <h3 className="text-lg font-semibold mb-4">Basic Information</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="nursing_home_id">Facility *</Label>
+          <Label htmlFor="nursing_home_id">Facility</Label>
           <Select 
             value={formData.nursing_home_id} 
             onValueChange={(value) => setFormData(prev => ({ ...prev, nursing_home_id: value }))}

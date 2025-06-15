@@ -61,12 +61,6 @@ export function ResidentForm({ resident, onSubmit, onCancel }: ResidentFormProps
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validate that a nursing home is selected
-    if (!formData.nursing_home_id) {
-      console.error('Nursing home must be selected');
-      return;
-    }
 
     // Validate required fields
     if (!formData.first_name || !formData.last_name || !formData.date_of_birth || !formData.admission_date) {
@@ -86,7 +80,7 @@ export function ResidentForm({ resident, onSubmit, onCancel }: ResidentFormProps
   };
 
   // Don't allow form submission if no nursing homes are available
-  const canSubmit = nursingHomes && nursingHomes.length > 0 && formData.nursing_home_id;
+  const canSubmit = nursingHomes && nursingHomes.length > 0;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
