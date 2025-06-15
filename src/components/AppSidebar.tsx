@@ -1,5 +1,4 @@
-
-import { Home, Building2, Users, FileText, Settings, DollarSign, PlusCircle } from "lucide-react"
+import { Home, Building2, Users, FileText, Settings, DollarSign, PlusCircle, LogOut } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 import {
   Sidebar,
@@ -11,6 +10,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { useAuth } from "@/contexts/AuthContext"
 
 const menuItems = [
   {
@@ -60,64 +60,86 @@ const quickActions = [
 
 export function AppSidebar() {
   const location = useLocation()
+  const { signOut } = useAuth()
 
   return (
     <Sidebar className="border-r border-sidebar-border">
-      <SidebarContent className="bg-sidebar">
-        {/* Logo/Header */}
-        <div className="p-6 border-b border-sidebar-border bg-gradient-to-r from-healthcare-primary to-healthcare-secondary text-white">
-          <h2 className="text-xl font-bold">Care Home MS</h2>
-          <p className="text-sm opacity-90">Management System</p>
+      <SidebarContent className="bg-sidebar flex flex-col h-full">
+        <div className="flex-grow">
+          {/* Logo/Header */}
+          <div className="p-6 border-b border-sidebar-border bg-gradient-to-r from-healthcare-primary to-healthcare-secondary text-white">
+            <h2 className="text-xl font-bold">Care Home MS</h2>
+            <p className="text-sm opacity-90">Management System</p>
+          </div>
+
+          {/* Main Navigation */}
+          <SidebarGroup className="px-4 py-6">
+            <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+              Navigation
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu className="space-y-1">
+                {menuItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton 
+                      asChild
+                      className={`w-full justify-start rounded-lg transition-all duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${
+                        location.pathname === item.url 
+                          ? 'bg-healthcare-primary text-white shadow-sm' 
+                          : 'text-sidebar-foreground'
+                      }`}
+                    >
+                      <Link to={item.url} className="flex items-center gap-3 p-3">
+                        <item.icon className="h-5 w-5" />
+                        <span className="font-medium">{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
+          {/* Quick Actions */}
+          <SidebarGroup className="px-4 pb-6">
+            <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+              Quick Actions
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu className="space-y-1">
+                {quickActions.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton 
+                      asChild
+                      className="w-full justify-start rounded-lg bg-gradient-to-r from-healthcare-secondary to-healthcare-primary text-white hover:opacity-90 transition-opacity duration-200"
+                    >
+                      <Link to={item.url} className="flex items-center gap-3 p-3">
+                        <item.icon className="h-4 w-4" />
+                        <span className="font-medium text-sm">{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
         </div>
 
-        {/* Main Navigation */}
-        <SidebarGroup className="px-4 py-6">
-          <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-            Navigation
-          </SidebarGroupLabel>
+        {/* Sign Out */}
+        <SidebarGroup className="p-4 border-t border-sidebar-border">
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-1">
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    asChild
-                    className={`w-full justify-start rounded-lg transition-all duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${
-                      location.pathname === item.url 
-                        ? 'bg-healthcare-primary text-white shadow-sm' 
-                        : 'text-sidebar-foreground'
-                    }`}
-                  >
-                    <Link to={item.url} className="flex items-center gap-3 p-3">
-                      <item.icon className="h-5 w-5" />
-                      <span className="font-medium">{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* Quick Actions */}
-        <SidebarGroup className="px-4 pb-6">
-          <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-            Quick Actions
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu className="space-y-1">
-              {quickActions.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    asChild
-                    className="w-full justify-start rounded-lg bg-gradient-to-r from-healthcare-secondary to-healthcare-primary text-white hover:opacity-90 transition-opacity duration-200"
-                  >
-                    <Link to={item.url} className="flex items-center gap-3 p-3">
-                      <item.icon className="h-4 w-4" />
-                      <span className="font-medium text-sm">{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  onClick={signOut}
+                  className="w-full justify-start rounded-lg transition-all duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sidebar-foreground"
+                >
+                  <div className="flex items-center gap-3 p-3">
+                    <LogOut className="h-5 w-5" />
+                    <span className="font-medium">Sign Out</span>
+                  </div>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
