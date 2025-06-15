@@ -69,7 +69,6 @@ export function ResidentsTable({
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>Facility</TableHead>
-            <TableHead>Emergency Contact</TableHead>
             <TableHead>Income Types</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
@@ -77,7 +76,7 @@ export function ResidentsTable({
         <TableBody>
           {filteredResidents.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+              <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
                 {searchTerm || statusFilter !== 'all' ? 'No residents match your filters.' : 'No residents found. Add your first resident to get started.'}
               </TableCell>
             </TableRow>
@@ -88,13 +87,6 @@ export function ResidentsTable({
                   {resident.first_name} {resident.last_name}
                 </TableCell>
                 <TableCell>{(resident as any).nursing_home_name || 'Unknown'}</TableCell>
-                <TableCell>
-                  <div className="space-y-1">
-                    <div className="font-medium">{resident.emergency_contact_name}</div>
-                    <div className="text-sm text-gray-600">{resident.emergency_contact_phone}</div>
-                    <div className="text-xs text-gray-500">{resident.emergency_contact_relationship}</div>
-                  </div>
-                </TableCell>
                 <TableCell>
                   <div className="text-sm">
                     {formatIncomeTypes(resident.income_types)}
