@@ -1,12 +1,12 @@
-
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "./AppSidebar"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
+  title: string
 }
 
-export function DashboardLayout({ children }: DashboardLayoutProps) {
+export function DashboardLayout({ children, title }: DashboardLayoutProps) {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
@@ -17,7 +17,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <SidebarTrigger className="mr-4" />
               <div className="flex flex-1 items-center justify-between">
                 <div>
-                  <h1 className="text-2xl font-bold text-foreground">Care Home Management</h1>
+                  <h1 className="text-2xl font-bold text-foreground">{title}</h1>
                 </div>
                 <div className="flex items-center space-x-4">
                   <div className="text-right">

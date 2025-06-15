@@ -1,4 +1,3 @@
-
 import { Building2, Users, DollarSign, FileText, PlusCircle, TrendingUp, LoaderIcon } from "lucide-react"
 import { StatCard } from "@/components/StatCard"
 import { QuickActionCard } from "@/components/QuickActionCard"
@@ -35,14 +34,6 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      {/* Welcome Section */}
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold text-foreground">Welcome back, Administrator</h1>
-        <p className="text-muted-foreground">
-          Here's what's happening with your care facilities today.
-        </p>
-      </div>
-
       {/* Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <StatCard

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Plus, Edit, Trash2, Building2, MapPin, Phone, Users, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -52,17 +51,12 @@ export default function NursingHomes() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Nursing Homes</h1>
-          <p className="text-muted-foreground">Manage your care facilities</p>
-        </div>
+      <div className="flex justify-end mb-4">
         <Button onClick={() => setIsFormOpen(true)} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
           Add Nursing Home
         </Button>
       </div>
-
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
