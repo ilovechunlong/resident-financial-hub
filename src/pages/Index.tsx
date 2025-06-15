@@ -1,16 +1,13 @@
 
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Outlet } from "react-router-dom";
+import { DashboardLayout } from "@/components/DashboardLayout";
 
 const Index = () => {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    // Redirect to dashboard as this is a management system
-    navigate("/");
-  }, [navigate]);
-
-  return null;
+  return (
+    <DashboardLayout>
+      <Outlet />
+    </DashboardLayout>
+  );
 };
 
 export default Index;
