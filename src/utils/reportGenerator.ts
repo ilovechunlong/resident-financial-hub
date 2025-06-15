@@ -45,6 +45,10 @@ export class ReportGenerator {
           data = await this.getResidentAnnualFinancialSummaryData(dateRange);
           summary = this.calculateResidentAnnualFinancialSummary(data);
           break;
+        case 'nursing_home_annual_financial_summary':
+          data = await this.getNursingHomeAnnualFinancialSummaryData(dateRange);
+          summary = this.calculateNursingHomeAnnualFinancialSummary(data);
+          break;
         default:
           throw new Error(`Unknown report type: ${reportType}`);
       }
@@ -165,6 +169,61 @@ export class ReportGenerator {
     });
   }
 
+  private static async getNursingHomeAnnualFinancialSummaryData(dateRange?: { start?: string; end?: string }) {
+    let transactionQuery = supabase
+      .from('financial_transactions')
+      .select('*')
+      .in('transaction_type', ['income', 'expense'])
+      .not('nursing_home_id', 'is', null);
+
+    if (dateRange?.start) {
+      transactionQuery = transactionQuery.gte('transaction_date', dateRange.start);
+    }
+    if (dateRange?.end) {
+      transactionQuery = transactionQuery.lte('transaction_date', dateRange.end);
+    }
+
+    const { data: transactions, error: transactionsError } = await transactionQuery;
+    if (transactionsError) throw transactionsError;
+
+    const { data: nursingHomes, error: nursingHomesError } = await supabase
+      .from('nursing_homes')
+      .select('id, name');
+    if (nursingHomesError) throw nursingHomesError;
+
+    if (!transactions || !nursingHomes) {
+      return [];
+    }
+
+    const transactionsByNursingHome = transactions.reduce((acc, t) => {
+      if (t.nursing_home_id) {
+        if (!acc[t.nursing_home_id]) {
+          acc[t.nursing_home_id] = [];
+        }
+        acc[t.nursing_home_id].push(t);
+      }
+      return acc;
+    }, {} as Record<string, any[]>);
+
+    return nursingHomes.map(nh => {
+      const nhTransactions = transactionsByNursingHome[nh.id] || [];
+      const totalIncome = nhTransactions
+        .filter(t => t.transaction_type === 'income')
+        .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+      const totalExpenses = nhTransactions
+        .filter(t => t.transaction_type === 'expense')
+        .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+      
+      return {
+        ...nh,
+        totalIncome,
+        totalExpenses,
+        netAmount: totalIncome - totalExpenses,
+        transactionCount: nhTransactions.length,
+      };
+    });
+  }
+
   private static calculateFinancialSummary(data: any[]) {
     const totalIncome = data
       .filter(t => t.transaction_type === 'income')
@@ -217,6 +276,13 @@ export class ReportGenerator {
   private static calculateResidentAnnualFinancialSummary(data: any[]) {
     return {
       totalResidents: data.length,
+      generatedAt: new Date().toISOString()
+    };
+  }
+
+  private static calculateNursingHomeAnnualFinancialSummary(data: any[]) {
+    return {
+      totalNursingHomes: data.length,
       generatedAt: new Date().toISOString()
     };
   }
@@ -316,6 +382,8 @@ export class ReportGenerator {
         return ['Name', 'Nursing Home', 'Room', 'Care Level', 'Admission Date', 'Status'];
       case 'resident_annual_financial_summary':
         return ['Resident Name', 'Transactions', 'Total Income', 'Total Expenses', 'Net Amount'];
+      case 'nursing_home_annual_financial_summary':
+        return ['Nursing Home', 'Transactions', 'Total Income', 'Total Expenses', 'Net Amount'];
       default:
         return [];
     }
@@ -360,6 +428,14 @@ export class ReportGenerator {
           `$${item.totalExpenses.toLocaleString()}`,
           `$${item.netAmount.toLocaleString()}`
         ]);
+      case 'nursing_home_annual_financial_summary':
+        return data.map(item => [
+          item.name,
+          item.transactionCount.toString(),
+          `$${item.totalIncome.toLocaleString()}`,
+          `$${item.totalExpenses.toLocaleString()}`,
+          `$${item.netAmount.toLocaleString()}`
+        ]);
       default:
         return [];
     }
@@ -379,6 +455,13 @@ export class ReportGenerator {
           5: { halign: 'right' }, // Monthly Rate
         };
       case 'resident_annual_financial_summary':
+        return {
+          1: { halign: 'right' }, // Transactions
+          2: { halign: 'right' }, // Total Income
+          3: { halign: 'right' }, // Total Expenses
+          4: { halign: 'right' }, // Net Amount
+        };
+      case 'nursing_home_annual_financial_summary':
         return {
           1: { halign: 'right' }, // Transactions
           2: { halign: 'right' }, // Total Income
@@ -440,6 +523,14 @@ export class ReportGenerator {
       case 'resident_annual_financial_summary':
         return data.map(item => ({
           'Resident Name': `${item.first_name} ${item.last_name}`,
+          'Transaction Count': item.transactionCount,
+          'Total Income': item.totalIncome,
+          'Total Expenses': item.totalExpenses,
+          'Net Amount': item.netAmount,
+        }));
+      case 'nursing_home_annual_financial_summary':
+        return data.map(item => ({
+          'Nursing Home': item.name,
           'Transaction Count': item.transactionCount,
           'Total Income': item.totalIncome,
           'Total Expenses': item.totalExpenses,

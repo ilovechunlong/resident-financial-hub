@@ -1,7 +1,7 @@
 export interface ReportConfiguration {
   id: string;
   name: string;
-  report_type: 'financial_summary' | 'transaction_report' | 'nursing_home_report' | 'resident_report' | 'resident_annual_financial_summary';
+  report_type: 'financial_summary' | 'transaction_report' | 'nursing_home_report' | 'resident_report' | 'resident_annual_financial_summary' | 'nursing_home_annual_financial_summary';
   filters: Record<string, any>;
   date_range_start: string | null;
   date_range_end: string | null;
@@ -19,7 +19,7 @@ export interface GeneratedReport {
 
 export interface ReportFormData {
   name: string;
-  report_type: 'financial_summary' | 'transaction_report' | 'nursing_home_report' | 'resident_report' | 'resident_annual_financial_summary';
+  report_type: 'financial_summary' | 'transaction_report' | 'nursing_home_report' | 'resident_report' | 'resident_annual_financial_summary' | 'nursing_home_annual_financial_summary';
   filters?: Record<string, any>;
   date_range_start?: string;
   date_range_end?: string;

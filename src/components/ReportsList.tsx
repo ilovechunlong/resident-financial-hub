@@ -31,6 +31,7 @@ export function ReportsList() {
       'nursing_home_report': 'Nursing Home Report',
       'resident_report': 'Resident Report',
       'resident_annual_financial_summary': 'Resident Annual Financial Summary',
+      'nursing_home_annual_financial_summary': 'Nursing Home Annual Financial Summary',
     };
     return labels[type as keyof typeof labels] || type;
   };
