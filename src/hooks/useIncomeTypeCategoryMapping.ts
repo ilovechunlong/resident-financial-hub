@@ -14,7 +14,7 @@ export const useIncomeTypeCategoryMapping = () => {
         const { data, error } = await supabase
           .from('income_type_category_mapping')
           .select('*')
-          .order('income_type', { ascending: true });
+          .order('display_label', { ascending: true });
 
         console.log('Supabase query completed');
         console.log('Raw supabase response data:', data);
