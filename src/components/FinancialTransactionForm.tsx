@@ -105,14 +105,14 @@ export function FinancialTransactionForm({ onSuccess }: FinancialTransactionForm
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Resident (Optional)</FormLabel>
-                    <Select onValueChange={(value) => field.onChange(value === "" ? undefined : value)} value={field.value ?? ""}>
+                    <Select onValueChange={(value) => field.onChange(value === "_NONE_" ? undefined : value)} value={field.value ?? ""}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select resident" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="_NONE_">None</SelectItem>
                         {residents.map((resident) => (
                           <SelectItem key={resident.id} value={resident.id}>
                             {resident.first_name} {resident.last_name}
@@ -131,14 +131,14 @@ export function FinancialTransactionForm({ onSuccess }: FinancialTransactionForm
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Nursing Home {watchResidentId ? '' : '(Optional)'}</FormLabel>
-                    <Select onValueChange={(value) => field.onChange(value === "" ? undefined : value)} value={field.value ?? ""} disabled={!!watchResidentId}>
+                    <Select onValueChange={(value) => field.onChange(value === "_NONE_" ? undefined : value)} value={field.value ?? ""} disabled={!!watchResidentId}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select nursing home" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {!watchResidentId && <SelectItem value="">None</SelectItem>}
+                        {!watchResidentId && <SelectItem value="_NONE_">None</SelectItem>}
                         {nursingHomes.map((home) => (
                           <SelectItem key={home.id} value={home.id}>
                             {home.name}
