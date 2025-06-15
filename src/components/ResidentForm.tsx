@@ -69,9 +69,7 @@ export function ResidentForm({ resident, onSubmit, onCancel }: ResidentFormProps
     }
 
     // Validate required fields
-    if (!formData.first_name || !formData.last_name || !formData.date_of_birth || 
-        !formData.emergency_contact_name || !formData.emergency_contact_phone || 
-        !formData.emergency_contact_relationship || !formData.admission_date) {
+    if (!formData.first_name || !formData.last_name || !formData.date_of_birth || !formData.admission_date) {
       console.error('Required fields are missing');
       return;
     }
