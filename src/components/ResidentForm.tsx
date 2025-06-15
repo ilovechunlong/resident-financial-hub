@@ -8,6 +8,7 @@ import { BasicInformationFields } from '@/components/forms/BasicInformationField
 import { EmergencyContactFields } from '@/components/forms/EmergencyContactFields';
 import { CareInformationFields } from '@/components/forms/CareInformationFields';
 import { AdditionalInformationFields } from '@/components/forms/AdditionalInformationFields';
+import { FinancialInformationFields } from './forms/FinancialInformationFields';
 
 interface ResidentFormProps {
   resident?: any;
@@ -104,6 +105,13 @@ export function ResidentForm({ resident, onSubmit, onCancel }: ResidentFormProps
           <CareInformationFields 
             formData={formData} 
             setFormData={setFormData} 
+          />
+
+          <Separator />
+
+          <FinancialInformationFields
+            formData={formData}
+            setFormData={setFormData}
           />
 
           <Separator />
