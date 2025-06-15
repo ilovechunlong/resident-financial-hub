@@ -26,14 +26,6 @@ export interface FinancialCategory {
   category_scope: 'nursing_home' | 'resident';
 }
 
-export interface IncomeTypeCategoryMapping {
-  id: string;
-  display_label: string;
-  description: string;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface FinancialTransactionFormData {
   nursing_home_id?: string;
   resident_id?: string;

@@ -1,5 +1,4 @@
-import { useIncomeTypeCategoryMapping } from '@/hooks/useIncomeTypeCategoryMapping';
-import { formatIncomeTypes } from './financial/IncomeTypeFormatter';
+import { useFinancialCategories } from '@/hooks/useFinancialTransactions';
 import { IncomeTypesGrid } from './financial/IncomeTypesGrid';
 import { CustomIncomeTypeForm } from './financial/CustomIncomeTypeForm';
 import { SelectedIncomeTypes } from './financial/SelectedIncomeTypes';
@@ -10,16 +9,20 @@ interface FinancialProfileStepProps {
 }
 
 export function FinancialProfileStep({ formData, updateFormData }: FinancialProfileStepProps) {
-  const { data: incomeTypeMappings, isLoading, error } = useIncomeTypeCategoryMapping();
+  const { data: allCategories, isLoading, error } = useFinancialCategories();
+
+  const incomeTypes = (allCategories || [])
+    .filter(cat => cat.transaction_type === 'income' && cat.category_scope === 'resident')
+    .map(cat => ({
+      id: cat.name,
+      label: cat.name,
+      description: cat.description,
+    }));
 
   console.log('=== FinancialProfileStep Debug ===');
-  console.log('Income type mappings from database:', incomeTypeMappings);
+  console.log('Income type mappings from database:', incomeTypes);
   console.log('Loading state:', isLoading);
   console.log('Error state:', error);
-
-  const incomeTypes = formatIncomeTypes(incomeTypeMappings);
-  
-  console.log('Final formatted income types in component:', incomeTypes);
 
   const handleIncomeTypeChange = (incomeTypeId: string, checked: boolean) => {
     const currentTypes = formData.income_types || [];
@@ -56,7 +59,6 @@ export function FinancialProfileStep({ formData, updateFormData }: FinancialProf
     const standardType = incomeTypes.find(type => type.id === typeId);
     if (standardType) return standardType.label;
     
-    // For custom types, format the ID back to a readable format
     if (typeId.startsWith('custom_')) {
       return typeId.replace('custom_', '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
@@ -101,7 +103,7 @@ export function FinancialProfileStep({ formData, updateFormData }: FinancialProf
         {!isLoading && incomeTypes.length === 0 && (
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-4">
             <p className="text-amber-800 text-sm">
-              No income types found in the database. Please add a custom one below, or configure them in the application settings.
+              No resident income categories found. Please add a custom one below, or configure them in the application settings.
             </p>
           </div>
         )}

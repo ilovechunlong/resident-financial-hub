@@ -1,7 +1,6 @@
 
 import React from 'react';
-import { useIncomeTypeCategoryMapping } from '@/hooks/useIncomeTypeCategoryMapping';
-import { formatIncomeTypes } from '@/components/onboarding/financial/IncomeTypeFormatter';
+import { useFinancialCategories } from '@/hooks/useFinancialTransactions';
 import { IncomeTypesGrid } from '@/components/onboarding/financial/IncomeTypesGrid';
 import { CustomIncomeTypeForm } from '@/components/onboarding/financial/CustomIncomeTypeForm';
 import { SelectedIncomeTypes } from '@/components/onboarding/financial/SelectedIncomeTypes';
@@ -13,9 +12,15 @@ interface FinancialInformationFieldsProps {
 }
 
 export function FinancialInformationFields({ formData, setFormData }: FinancialInformationFieldsProps) {
-  const { data: incomeTypeMappings, isLoading, error } = useIncomeTypeCategoryMapping();
+  const { data: allCategories, isLoading, error } = useFinancialCategories();
   
-  const incomeTypes = formatIncomeTypes(incomeTypeMappings);
+  const incomeTypes = (allCategories || [])
+    .filter(cat => cat.transaction_type === 'income' && cat.category_scope === 'resident')
+    .map(cat => ({
+      id: cat.name,
+      label: cat.name,
+      description: cat.description,
+    }));
 
   const handleIncomeTypeChange = (incomeTypeId: string, checked: boolean) => {
     const currentTypes = formData.income_types || [];
@@ -45,8 +50,6 @@ export function FinancialInformationFields({ formData, setFormData }: FinancialI
   };
 
   const getDisplayName = (typeId: string) => {
-    if (!incomeTypes) return typeId.replace('custom_', '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-
     const standardType = incomeTypes.find(type => type.id === typeId);
     if (standardType) return standardType.label;
     

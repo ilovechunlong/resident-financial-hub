@@ -140,30 +140,6 @@ export type Database = {
           },
         ]
       }
-      income_type_category_mapping: {
-        Row: {
-          created_at: string
-          description: string
-          display_label: string
-          id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description: string
-          display_label: string
-          id?: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string
-          display_label?: string
-          id?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       nursing_homes: {
         Row: {
           accreditation: string | null

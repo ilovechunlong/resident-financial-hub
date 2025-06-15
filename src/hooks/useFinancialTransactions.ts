@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { FinancialTransaction, FinancialTransactionFormData } from '@/types/financial';
@@ -109,6 +108,3 @@ export const useFinancialCategories = () => {
     },
   });
 };
-
-// Re-export the income type category mapping hook for convenience
-export { useIncomeTypeCategoryMapping } from './useIncomeTypeCategoryMapping';

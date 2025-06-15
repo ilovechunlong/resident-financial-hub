@@ -1,4 +1,3 @@
-
 import React, { useEffect, useMemo } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import {
@@ -17,7 +16,6 @@ import {
 } from '@/components/ui/select';
 import { FinancialTransactionFormValues } from '../financialTransactionFormSchema';
 import { FinancialCategory } from '@/types/financial';
-import { useIncomeTypeCategoryMapping } from '@/hooks/useIncomeTypeCategoryMapping';
 
 interface CategoryFieldProps {
   form: UseFormReturn<FinancialTransactionFormValues>;
@@ -29,45 +27,24 @@ interface CategoryFieldProps {
 
 export function CategoryField({ form, categories, watchTransactionType, residents = [], transactionScope }: CategoryFieldProps) {
   const watchResidentId = form.watch('resident_id');
-  const { data: incomeTypeMappings = [], isLoading: isMappingsLoading } = useIncomeTypeCategoryMapping();
   
   const selectedResident = residents.find(resident => resident.id === watchResidentId);
   
-  const incomeTypeToCategoryMapping = useMemo(() => {
-    const mapping: Record<string, string[]> = {};
-    
-    incomeTypeMappings.forEach(({ id, display_label }) => {
-      if (!mapping[id]) {
-        mapping[id] = [];
-      }
-      mapping[id].push(display_label);
-    });
-    
-    return mapping;
-  }, [incomeTypeMappings]);
-
   const filteredCategories = useMemo(() => {
     let filtered = categories.filter(
       category => category.category_scope === transactionScope && category.transaction_type === watchTransactionType
     );
 
-    if (transactionScope === 'resident' && watchTransactionType === 'income' && selectedResident && selectedResident.income_types && !isMappingsLoading) {
-      const allowedCategoryNames: string[] = [];
-      
-      selectedResident.income_types.forEach((incomeType: string) => {
-        const mappedCategories = incomeTypeToCategoryMapping[incomeType] || [];
-        allowedCategoryNames.push(...mappedCategories);
-      });
-      
-      const uniqueAllowedCategoryNames = [...new Set(allowedCategoryNames)];
+    if (transactionScope === 'resident' && watchTransactionType === 'income' && selectedResident && selectedResident.income_types) {
+      const allowedCategoryNames: string[] = selectedResident.income_types;
       
       filtered = filtered.filter(category => 
-        uniqueAllowedCategoryNames.includes(category.name)
+        allowedCategoryNames.includes(category.name)
       );
     }
 
     return filtered;
-  }, [categories, transactionScope, watchTransactionType, selectedResident, isMappingsLoading, incomeTypeToCategoryMapping]);
+  }, [categories, transactionScope, watchTransactionType, selectedResident]);
 
   useEffect(() => {
     const currentCategory = form.getValues('category');
@@ -101,7 +78,7 @@ export function CategoryField({ form, categories, watchTransactionType, resident
                 ))
               ) : (
                 <SelectItem value="no-categories-available" disabled>
-                  {isMappingsLoading ? 'Loading categories...' : 'No categories available'}
+                  No categories available
                 </SelectItem>
               )}
             </SelectContent>

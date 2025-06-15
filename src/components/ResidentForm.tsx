@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -76,8 +75,16 @@ export function ResidentForm({ resident, onSubmit, onCancel }: ResidentFormProps
       console.error('Required fields are missing');
       return;
     }
+    
+    const processedIncomeTypes = (formData.income_types || []).map(type => {
+      if (type.startsWith('custom_')) {
+        return type.replace('custom_', '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      }
+      return type;
+    });
 
-    onSubmit(formData);
+    const finalFormData = { ...formData, income_types: processedIncomeTypes };
+    onSubmit(finalFormData);
   };
 
   // Don't allow form submission if no nursing homes are available
