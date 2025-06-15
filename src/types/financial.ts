@@ -23,6 +23,7 @@ export interface FinancialCategory {
   description?: string;
   is_active?: boolean;
   created_at: string;
+  category_scope: 'nursing_home' | 'resident';
 }
 
 export interface IncomeTypeCategoryMapping {

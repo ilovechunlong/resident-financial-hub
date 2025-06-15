@@ -103,7 +103,8 @@ export const useFinancialCategories = () => {
       // Cast the data to match our TypeScript interface
       return data.map(category => ({
         ...category,
-        transaction_type: category.transaction_type as 'income' | 'expense'
+        transaction_type: category.transaction_type as 'income' | 'expense',
+        category_scope: category.category_scope as 'nursing_home' | 'resident'
       }));
     },
   });

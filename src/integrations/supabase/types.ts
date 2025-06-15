@@ -11,6 +11,7 @@ export type Database = {
     Tables: {
       financial_categories: {
         Row: {
+          category_scope: string
           created_at: string
           description: string | null
           id: string
@@ -19,6 +20,7 @@ export type Database = {
           transaction_type: string
         }
         Insert: {
+          category_scope: string
           created_at?: string
           description?: string | null
           id?: string
@@ -27,6 +29,7 @@ export type Database = {
           transaction_type: string
         }
         Update: {
+          category_scope?: string
           created_at?: string
           description?: string | null
           id?: string

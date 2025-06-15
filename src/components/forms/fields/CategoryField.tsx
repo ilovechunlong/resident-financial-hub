@@ -1,3 +1,4 @@
+
 import React, { useEffect, useMemo } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import {
@@ -23,25 +24,15 @@ interface CategoryFieldProps {
   categories: FinancialCategory[];
   watchTransactionType: 'income' | 'expense';
   residents?: any[];
+  transactionScope: 'nursing_home' | 'resident';
 }
 
-export function CategoryField({ form, categories, watchTransactionType, residents = [] }: CategoryFieldProps) {
+export function CategoryField({ form, categories, watchTransactionType, residents = [], transactionScope }: CategoryFieldProps) {
   const watchResidentId = form.watch('resident_id');
   const { data: incomeTypeMappings = [], isLoading: isMappingsLoading } = useIncomeTypeCategoryMapping();
   
-  // Find the selected resident
   const selectedResident = residents.find(resident => resident.id === watchResidentId);
   
-  console.log('Debug CategoryField:', {
-    watchTransactionType,
-    watchResidentId,
-    selectedResident,
-    totalCategories: categories.length,
-    residents: residents.length,
-    incomeTypeMappings: incomeTypeMappings.length
-  });
-
-  // Create a mapping from income types to category names using the database data
   const incomeTypeToCategoryMapping = useMemo(() => {
     const mapping: Record<string, string[]> = {};
     
@@ -52,25 +43,15 @@ export function CategoryField({ form, categories, watchTransactionType, resident
       mapping[id].push(display_label);
     });
     
-    console.log('Dynamic income type to category mapping:', mapping);
     return mapping;
   }, [incomeTypeMappings]);
 
-  // Filter categories based on transaction type and resident's income types
-  const getFilteredCategories = () => {
-    console.log('All categories:', categories);
-    
-    let filteredCategories = categories.filter(
-      category => category.transaction_type === watchTransactionType
+  const filteredCategories = useMemo(() => {
+    let filtered = categories.filter(
+      category => category.category_scope === transactionScope && category.transaction_type === watchTransactionType
     );
-    
-    console.log('Categories after transaction type filter:', filteredCategories);
 
-    // If transaction type is income and a resident is selected, filter by resident's income types
-    if (watchTransactionType === 'income' && selectedResident && selectedResident.income_types && !isMappingsLoading) {
-      console.log('Selected resident income types:', selectedResident.income_types);
-      
-      // Get all allowed category names based on the resident's income types
+    if (transactionScope === 'resident' && watchTransactionType === 'income' && selectedResident && selectedResident.income_types && !isMappingsLoading) {
       const allowedCategoryNames: string[] = [];
       
       selectedResident.income_types.forEach((incomeType: string) => {
@@ -78,34 +59,25 @@ export function CategoryField({ form, categories, watchTransactionType, resident
         allowedCategoryNames.push(...mappedCategories);
       });
       
-      // Remove duplicates
       const uniqueAllowedCategoryNames = [...new Set(allowedCategoryNames)];
       
-      console.log('Allowed category names based on income types:', uniqueAllowedCategoryNames);
-      
-      filteredCategories = filteredCategories.filter(category => 
+      filtered = filtered.filter(category => 
         uniqueAllowedCategoryNames.includes(category.name)
       );
-      
-      console.log('Categories after income types filter:', filteredCategories);
     }
 
-    return filteredCategories;
-  };
+    return filtered;
+  }, [categories, transactionScope, watchTransactionType, selectedResident, isMappingsLoading, incomeTypeToCategoryMapping]);
 
-  const filteredCategories = getFilteredCategories();
-
-  // Clear category when resident changes and transaction type is income
   useEffect(() => {
-    if (watchTransactionType === 'income' && watchResidentId && !isMappingsLoading) {
-      const currentCategory = form.getValues('category');
+    const currentCategory = form.getValues('category');
+    if (currentCategory) {
       const isCurrentCategoryValid = filteredCategories.some(cat => cat.name === currentCategory);
-      
       if (!isCurrentCategoryValid) {
-        form.setValue('category', '');
+        form.setValue('category', '', { shouldValidate: true });
       }
     }
-  }, [watchResidentId, watchTransactionType, form, filteredCategories, isMappingsLoading]);
+  }, [filteredCategories, form]);
 
   return (
     <FormField

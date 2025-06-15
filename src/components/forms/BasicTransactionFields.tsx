@@ -15,9 +15,10 @@ interface BasicTransactionFieldsProps {
   categories: FinancialCategory[];
   watchTransactionType: 'income' | 'expense';
   residents?: any[];
+  transactionScope: 'nursing_home' | 'resident';
 }
 
-export function BasicTransactionFields({ form, categories, watchTransactionType, residents = [] }: BasicTransactionFieldsProps) {
+export function BasicTransactionFields({ form, categories, watchTransactionType, residents = [], transactionScope }: BasicTransactionFieldsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <TransactionTypeField form={form} />
@@ -26,6 +27,7 @@ export function BasicTransactionFields({ form, categories, watchTransactionType,
         categories={categories} 
         watchTransactionType={watchTransactionType}
         residents={residents}
+        transactionScope={transactionScope}
       />
       <AmountField form={form} />
       <TransactionDateField form={form} />
