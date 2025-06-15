@@ -1,4 +1,3 @@
-
 export interface FinancialTransaction {
   id: string;
   nursing_home_id?: string;
@@ -30,6 +29,8 @@ export interface IncomeTypeCategoryMapping {
   id: string;
   income_type: string;
   category_name: string;
+  display_label: string;
+  description: string;
   created_at: string;
   updated_at: string;
 }

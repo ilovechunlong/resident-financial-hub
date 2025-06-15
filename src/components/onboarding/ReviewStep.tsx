@@ -1,8 +1,8 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { NursingHome } from '@/types/nursingHome';
+import { useIncomeTypeCategoryMapping } from '@/hooks/useIncomeTypeCategoryMapping';
 
 interface ReviewStepProps {
   formData: any;
@@ -10,6 +10,7 @@ interface ReviewStepProps {
 }
 
 export function ReviewStep({ formData, nursingHomes }: ReviewStepProps) {
+  const { data: incomeTypeMappings } = useIncomeTypeCategoryMapping();
   const selectedHome = nursingHomes.find(home => home.id === formData.nursing_home_id);
 
   const getAge = (dateOfBirth: string) => {
@@ -27,24 +28,18 @@ export function ReviewStep({ formData, nursingHomes }: ReviewStepProps) {
   };
 
   const getDisplayName = (typeId: string) => {
-    const incomeTypes = [
-      { id: 'ssi', label: 'SSI (Supplemental Security Income)' },
-      { id: 'ssdi', label: 'SSDI (Social Security Disability Insurance)' },
-      { id: 'grant', label: 'Grant' },
-      { id: 'waiver', label: 'Waiver' },
-      { id: 'pension', label: 'Pension' },
-      { id: 'family_support', label: 'Family Support' },
-      { id: 'other', label: 'Other' },
-    ];
-
-    const standardType = incomeTypes.find(type => type.id === typeId);
-    if (standardType) return standardType.label;
+    if (incomeTypeMappings) {
+      const mapping = incomeTypeMappings.find(m => m.income_type === typeId);
+      if (mapping) {
+        return mapping.display_label;
+      }
+    }
     
     if (typeId.startsWith('custom_')) {
       return typeId.replace('custom_', '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
     
-    return typeId;
+    return typeId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
   return (
