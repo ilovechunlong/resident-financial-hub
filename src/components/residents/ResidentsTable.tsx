@@ -1,9 +1,9 @@
-
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Edit, Trash2 } from 'lucide-react';
 import { Resident } from '@/types/resident';
+import { useIncomeTypeCategoryMapping } from '@/hooks/useIncomeTypeCategoryMapping';
 
 interface ResidentsTableProps {
   residents: Resident[];
@@ -20,6 +20,8 @@ export function ResidentsTable({
   searchTerm, 
   statusFilter 
 }: ResidentsTableProps) {
+  const { data: incomeTypeMappings, isLoading: isMappingsLoading } = useIncomeTypeCategoryMapping();
+
   const getStatusBadge = (status: string) => {
     const variants: { [key: string]: 'default' | 'secondary' | 'destructive' | 'outline' } = {
       active: 'default',
@@ -30,33 +32,23 @@ export function ResidentsTable({
     return <Badge variant={variants[status] || 'secondary'}>{status.replace('_', ' ')}</Badge>;
   };
 
-  const getDisplayName = (typeId: string) => {
-    const incomeTypes = [
-      { id: 'ssi', label: 'SSI (Supplemental Security Income)' },
-      { id: 'ssdi', label: 'SSDI (Social Security Disability Insurance)' },
-      { id: 'grant', label: 'Grant' },
-      { id: 'waiver', label: 'Waiver' },
-      { id: 'pension', label: 'Pension' },
-      { id: 'family_support', label: 'Family Support' },
-      { id: 'other', label: 'Other' },
-    ];
-
-    const standardType = incomeTypes.find(type => type.id === typeId);
-    if (standardType) return standardType.label;
-    
-    if (typeId.startsWith('custom_')) {
-      return typeId.replace('custom_', '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-    }
-    
-    return typeId;
-  };
-
   const formatIncomeTypes = (incomeTypes: string[] | undefined) => {
     if (!incomeTypes || incomeTypes.length === 0) {
       return 'Not specified';
     }
     
-    return incomeTypes.map(type => getDisplayName(type)).join(', ');
+    if (isMappingsLoading) {
+      return 'Loading...';
+    }
+
+    if (!incomeTypeMappings) {
+      return 'Error loading income types';
+    }
+
+    return incomeTypes.map(typeId => {
+      const mapping = incomeTypeMappings.find(m => m.id === typeId);
+      return mapping ? mapping.display_label : typeId;
+    }).join(', ');
   };
 
   const filteredResidents = residents.filter(resident => {
