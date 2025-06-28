@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,6 +22,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCreateReportConfiguration } from '@/hooks/useReports';
+import { useNursingHomes } from '@/hooks/useNursingHomes';
 import { ReportFormData } from '@/types/report';
 
 const reportFormSchema = z.object({
@@ -28,6 +30,7 @@ const reportFormSchema = z.object({
   report_type: z.enum(['financial_summary', 'transaction_report', 'nursing_home_report', 'resident_report', 'resident_annual_financial_summary', 'nursing_home_annual_financial_summary']),
   date_range_start: z.string().optional(),
   date_range_end: z.string().optional(),
+  nursing_home_id: z.string().min(1, 'Nursing home is required'),
 });
 
 type ReportFormValues = z.infer<typeof reportFormSchema>;
@@ -38,6 +41,7 @@ interface ReportConfigurationFormProps {
 
 export function ReportConfigurationForm({ onSuccess }: ReportConfigurationFormProps) {
   const createReportMutation = useCreateReportConfiguration();
+  const { data: nursingHomes, isLoading: nursingHomesLoading } = useNursingHomes();
 
   const form = useForm<ReportFormValues>({
     resolver: zodResolver(reportFormSchema),
@@ -46,6 +50,7 @@ export function ReportConfigurationForm({ onSuccess }: ReportConfigurationFormPr
       report_type: 'financial_summary',
       date_range_start: '',
       date_range_end: '',
+      nursing_home_id: '',
     },
   });
 
@@ -55,6 +60,7 @@ export function ReportConfigurationForm({ onSuccess }: ReportConfigurationFormPr
       const reportData: ReportFormData = {
         name: values.name,
         report_type: values.report_type,
+        nursing_home_id: values.nursing_home_id,
         ...(values.date_range_start && { date_range_start: values.date_range_start }),
         ...(values.date_range_end && { date_range_end: values.date_range_end }),
       };
@@ -93,6 +99,35 @@ export function ReportConfigurationForm({ onSuccess }: ReportConfigurationFormPr
                   <FormControl>
                     <Input placeholder="Enter report name" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="nursing_home_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nursing Home</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select nursing home" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {nursingHomesLoading ? (
+                        <SelectItem value="loading" disabled>Loading...</SelectItem>
+                      ) : (
+                        nursingHomes?.map((home) => (
+                          <SelectItem key={home.id} value={home.id}>
+                            {home.name}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
 import {
   Table,
@@ -13,10 +13,22 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DownloadIcon, FileTextIcon } from 'lucide-react';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import { useGeneratedReports } from '@/hooks/useReports';
 
 export function GeneratedReportsList() {
-  const { data: generatedReports, isLoading } = useGeneratedReports();
+  const [currentPage, setCurrentPage] = useState(1);
+  const limit = 10;
+  
+  const { data: generatedReportsData, isLoading } = useGeneratedReports(undefined, { page: currentPage, limit });
 
   const handleDownloadReport = (report: any) => {
     // Create a downloadable JSON file
@@ -50,7 +62,7 @@ export function GeneratedReportsList() {
     );
   }
 
-  if (!generatedReports || generatedReports.length === 0) {
+  if (!generatedReportsData || generatedReportsData.data.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -67,12 +79,14 @@ export function GeneratedReportsList() {
     );
   }
 
+  const { data: generatedReports, totalPages } = generatedReportsData;
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Generated Reports</CardTitle>
+        <CardTitle>Generated Reports ({generatedReportsData.total} total)</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
         <Table>
           <TableHeader>
             <TableRow>
@@ -112,6 +126,45 @@ export function GeneratedReportsList() {
             ))}
           </TableBody>
         </Table>
+
+        {totalPages > 1 && (
+          <div className="flex justify-center">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+                
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const pageNum = i + 1;
+                  return (
+                    <PaginationItem key={pageNum}>
+                      <PaginationLink
+                        onClick={() => setCurrentPage(pageNum)}
+                        isActive={currentPage === pageNum}
+                        className="cursor-pointer"
+                      >
+                        {pageNum}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                })}
+                
+                {totalPages > 5 && <PaginationEllipsis />}
+                
+                <PaginationItem>
+                  <PaginationNext 
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

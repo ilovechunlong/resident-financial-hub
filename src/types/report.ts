@@ -1,3 +1,4 @@
+
 export interface ReportConfiguration {
   id: string;
   name: string;
@@ -5,6 +6,7 @@ export interface ReportConfiguration {
   filters: Record<string, any>;
   date_range_start: string | null;
   date_range_end: string | null;
+  nursing_home_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -23,4 +25,18 @@ export interface ReportFormData {
   filters?: Record<string, any>;
   date_range_start?: string;
   date_range_end?: string;
+  nursing_home_id?: string;
+}
+
+export interface PaginationParams {
+  page: number;
+  limit: number;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }

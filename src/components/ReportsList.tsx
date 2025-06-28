@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
 import {
   Table,
@@ -13,11 +13,25 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PlayIcon, FileTextIcon } from 'lucide-react';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import { useReportConfigurations, useGenerateReport } from '@/hooks/useReports';
+import { useNursingHomes } from '@/hooks/useNursingHomes';
 import { ReportExportButton } from '@/components/ReportExportButton';
 
 export function ReportsList() {
-  const { data: reportConfigurations, isLoading } = useReportConfigurations();
+  const [currentPage, setCurrentPage] = useState(1);
+  const limit = 10;
+  
+  const { data: reportConfigurationsData, isLoading } = useReportConfigurations({ page: currentPage, limit });
+  const { data: nursingHomes } = useNursingHomes();
   const generateReportMutation = useGenerateReport();
 
   const handleGenerateReport = (configurationId: string) => {
@@ -36,6 +50,12 @@ export function ReportsList() {
     return labels[type as keyof typeof labels] || type;
   };
 
+  const getNursingHomeName = (nursingHomeId: string | null) => {
+    if (!nursingHomeId || !nursingHomes) return 'All Nursing Homes';
+    const home = nursingHomes.find(h => h.id === nursingHomeId);
+    return home?.name || 'Unknown';
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -46,7 +66,7 @@ export function ReportsList() {
     );
   }
 
-  if (!reportConfigurations || reportConfigurations.length === 0) {
+  if (!reportConfigurationsData || reportConfigurationsData.data.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -63,16 +83,19 @@ export function ReportsList() {
     );
   }
 
+  const { data: reportConfigurations, totalPages } = reportConfigurationsData;
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Report Configurations</CardTitle>
+        <CardTitle>Report Configurations ({reportConfigurationsData.total} total)</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
+              <TableHead>Nursing Home</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Date Range</TableHead>
               <TableHead>Created</TableHead>
@@ -83,6 +106,9 @@ export function ReportsList() {
             {reportConfigurations.map((config) => (
               <TableRow key={config.id}>
                 <TableCell className="font-medium">{config.name}</TableCell>
+                <TableCell>
+                  <span className="text-sm">{getNursingHomeName(config.nursing_home_id)}</span>
+                </TableCell>
                 <TableCell>
                   <Badge variant="secondary">
                     {getReportTypeLabel(config.report_type)}
@@ -119,6 +145,45 @@ export function ReportsList() {
             ))}
           </TableBody>
         </Table>
+
+        {totalPages > 1 && (
+          <div className="flex justify-center">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+                
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const pageNum = i + 1;
+                  return (
+                    <PaginationItem key={pageNum}>
+                      <PaginationLink
+                        onClick={() => setCurrentPage(pageNum)}
+                        isActive={currentPage === pageNum}
+                        className="cursor-pointer"
+                      >
+                        {pageNum}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                })}
+                
+                {totalPages > 5 && <PaginationEllipsis />}
+                
+                <PaginationItem>
+                  <PaginationNext 
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

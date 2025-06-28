@@ -1,19 +1,28 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { ReportConfiguration, GeneratedReport, ReportFormData } from '@/types/report';
+import { ReportConfiguration, GeneratedReport, ReportFormData, PaginationParams, PaginatedResponse } from '@/types/report';
 import { useToast } from '@/hooks/use-toast';
 import { ReportGenerator } from '@/utils/reportGenerator';
 
-export const useReportConfigurations = () => {
+export const useReportConfigurations = (pagination?: PaginationParams) => {
   return useQuery({
-    queryKey: ['report-configurations'],
-    queryFn: async (): Promise<ReportConfiguration[]> => {
+    queryKey: ['report-configurations', pagination],
+    queryFn: async (): Promise<PaginatedResponse<ReportConfiguration>> => {
       console.log('Fetching report configurations...');
       
-      const { data, error } = await supabase
+      let query = supabase
         .from('report_configurations')
-        .select('*')
+        .select('*', { count: 'exact' })
         .order('created_at', { ascending: false });
+
+      if (pagination) {
+        const from = (pagination.page - 1) * pagination.limit;
+        const to = from + pagination.limit - 1;
+        query = query.range(from, to);
+      }
+
+      const { data, error, count } = await query;
 
       if (error) {
         console.error('Error fetching report configurations:', error);
@@ -21,27 +30,42 @@ export const useReportConfigurations = () => {
       }
 
       console.log('Report configurations fetched:', data);
-      return data as ReportConfiguration[];
+      
+      const totalPages = pagination ? Math.ceil((count || 0) / pagination.limit) : 1;
+      
+      return {
+        data: data as ReportConfiguration[],
+        total: count || 0,
+        page: pagination?.page || 1,
+        limit: pagination?.limit || data?.length || 0,
+        totalPages,
+      };
     },
   });
 };
 
-export const useGeneratedReports = (configurationId?: string) => {
+export const useGeneratedReports = (configurationId?: string, pagination?: PaginationParams) => {
   return useQuery({
-    queryKey: ['generated-reports', configurationId],
-    queryFn: async (): Promise<GeneratedReport[]> => {
+    queryKey: ['generated-reports', configurationId, pagination],
+    queryFn: async (): Promise<PaginatedResponse<GeneratedReport>> => {
       console.log('Fetching generated reports...');
       
       let query = supabase
         .from('generated_reports')
-        .select('*')
+        .select('*', { count: 'exact' })
         .order('generated_at', { ascending: false });
 
       if (configurationId) {
         query = query.eq('configuration_id', configurationId);
       }
 
-      const { data, error } = await query;
+      if (pagination) {
+        const from = (pagination.page - 1) * pagination.limit;
+        const to = from + pagination.limit - 1;
+        query = query.range(from, to);
+      }
+
+      const { data, error, count } = await query;
 
       if (error) {
         console.error('Error fetching generated reports:', error);
@@ -49,7 +73,16 @@ export const useGeneratedReports = (configurationId?: string) => {
       }
 
       console.log('Generated reports fetched:', data);
-      return data as GeneratedReport[];
+      
+      const totalPages = pagination ? Math.ceil((count || 0) / pagination.limit) : 1;
+      
+      return {
+        data: data as GeneratedReport[],
+        total: count || 0,
+        page: pagination?.page || 1,
+        limit: pagination?.limit || data?.length || 0,
+        totalPages,
+      };
     },
   });
 };
@@ -121,6 +154,7 @@ export const useGenerateReport = () => {
         {
           start: config.date_range_start || undefined,
           end: config.date_range_end || undefined,
+          nursingHomeId: config.nursing_home_id || undefined,
         }
       );
 
@@ -134,7 +168,8 @@ export const useGenerateReport = () => {
             total_records: reportData.data.length,
             generated_at: new Date().toISOString(),
             report_type: config.report_type,
-            date_range: reportData.dateRange
+            date_range: reportData.dateRange,
+            nursing_home_id: config.nursing_home_id
           },
           status: 'completed'
         }])
