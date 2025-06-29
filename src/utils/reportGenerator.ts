@@ -1,3 +1,4 @@
+
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -283,7 +284,7 @@ export class ReportGenerator {
         };
       }
       
-      acc[key].totalIncome += parseFloat(transaction.amount);
+      acc[key].totalIncome += Number(transaction.amount);
       
       // Track residents and their income
       const residentId = transaction.resident_id;
@@ -298,7 +299,7 @@ export class ReportGenerator {
         });
       }
       
-      acc[key].residents.get(residentId).totalIncome += parseFloat(transaction.amount);
+      acc[key].residents.get(residentId).totalIncome += Number(transaction.amount);
       
       return acc;
     }, {} as Record<string, any>);
