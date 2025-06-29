@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import {
@@ -11,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PlayIcon, FileTextIcon } from 'lucide-react';
+import { PlayIcon, FileTextIcon, Trash2Icon } from 'lucide-react';
 import {
   Pagination,
   PaginationContent,
@@ -21,9 +22,21 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { useReportConfigurations } from '@/hooks/useReportConfigurations';
 import { useGenerateReport } from '@/hooks/useGenerateReport';
 import { useNursingHomes } from '@/hooks/useNursingHomes';
+import { useDeleteReportConfiguration } from '@/hooks/useDeleteReportConfiguration';
 import { ReportExportButton } from '@/components/ReportExportButton';
 
 export function ReportsList() {
@@ -33,9 +46,14 @@ export function ReportsList() {
   const { data: reportConfigurationsData, isLoading } = useReportConfigurations({ page: currentPage, limit });
   const { nursingHomes } = useNursingHomes();
   const generateReportMutation = useGenerateReport();
+  const deleteConfigurationMutation = useDeleteReportConfiguration();
 
   const handleGenerateReport = (configurationId: string) => {
     generateReportMutation.mutate(configurationId);
+  };
+
+  const handleDeleteConfiguration = (configurationId: string) => {
+    deleteConfigurationMutation.mutate(configurationId);
   };
 
   const getReportTypeLabel = (type: string) => {
@@ -55,6 +73,84 @@ export function ReportsList() {
     if (!nursingHomeId || !nursingHomes) return 'All Nursing Homes';
     const home = nursingHomes.find(h => h.id === nursingHomeId);
     return home?.name || 'Unknown';
+  };
+
+  const renderPagination = () => {
+    if (!reportConfigurationsData || reportConfigurationsData.totalPages <= 1) return null;
+
+    const { totalPages } = reportConfigurationsData;
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    return (
+      <div className="flex justify-center">
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious 
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+              />
+            </PaginationItem>
+            
+            {startPage > 1 && (
+              <>
+                <PaginationItem>
+                  <PaginationLink
+                    onClick={() => setCurrentPage(1)}
+                    className="cursor-pointer"
+                  >
+                    1
+                  </PaginationLink>
+                </PaginationItem>
+                {startPage > 2 && <PaginationEllipsis />}
+              </>
+            )}
+
+            {Array.from({ length: endPage - startPage + 1 }, (_, i) => {
+              const pageNum = startPage + i;
+              return (
+                <PaginationItem key={pageNum}>
+                  <PaginationLink
+                    onClick={() => setCurrentPage(pageNum)}
+                    isActive={currentPage === pageNum}
+                    className="cursor-pointer"
+                  >
+                    {pageNum}
+                  </PaginationLink>
+                </PaginationItem>
+              );
+            })}
+
+            {endPage < totalPages && (
+              <>
+                {endPage < totalPages - 1 && <PaginationEllipsis />}
+                <PaginationItem>
+                  <PaginationLink
+                    onClick={() => setCurrentPage(totalPages)}
+                    className="cursor-pointer"
+                  >
+                    {totalPages}
+                  </PaginationLink>
+                </PaginationItem>
+              </>
+            )}
+            
+            <PaginationItem>
+              <PaginationNext 
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
+    );
   };
 
   if (isLoading) {
@@ -84,7 +180,7 @@ export function ReportsList() {
     );
   }
 
-  const { data: reportConfigurations, totalPages } = reportConfigurationsData;
+  const { data: reportConfigurations } = reportConfigurationsData;
 
   return (
     <Card>
@@ -140,6 +236,35 @@ export function ReportsList() {
                       Generate
                     </Button>
                     <ReportExportButton configuration={config} />
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2Icon className="h-4 w-4 mr-2" />
+                          Delete
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Report Configuration</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete this report configuration? This action cannot be undone and will also delete any generated reports associated with this configuration.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeleteConfiguration(config.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </TableCell>
               </TableRow>
@@ -147,44 +272,7 @@ export function ReportsList() {
           </TableBody>
         </Table>
 
-        {totalPages > 1 && (
-          <div className="flex justify-center">
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious 
-                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                    className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                  />
-                </PaginationItem>
-                
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const pageNum = i + 1;
-                  return (
-                    <PaginationItem key={pageNum}>
-                      <PaginationLink
-                        onClick={() => setCurrentPage(pageNum)}
-                        isActive={currentPage === pageNum}
-                        className="cursor-pointer"
-                      >
-                        {pageNum}
-                      </PaginationLink>
-                    </PaginationItem>
-                  );
-                })}
-                
-                {totalPages > 5 && <PaginationEllipsis />}
-                
-                <PaginationItem>
-                  <PaginationNext 
-                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                    className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          </div>
-        )}
+        {renderPagination()}
       </CardContent>
     </Card>
   );
