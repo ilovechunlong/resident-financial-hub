@@ -32,7 +32,6 @@ export const useGenerateReport = () => {
         {
           start: config.date_range_start || undefined,
           end: config.date_range_end || undefined,
-          nursingHomeId: config.nursing_home_id || undefined,
         }
       );
 

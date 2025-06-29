@@ -49,6 +49,10 @@ export class ReportGenerator {
           data = await this.getNursingHomeAnnualFinancialSummaryData(dateRange);
           summary = this.calculateNursingHomeAnnualFinancialSummary(data);
           break;
+        case 'residents_income_per_nursing_home_monthly':
+          data = await this.getResidentsIncomePerNursingHomeMonthlyData(dateRange);
+          summary = this.calculateResidentsIncomePerNursingHomeMonthly(data);
+          break;
         default:
           throw new Error(`Unknown report type: ${reportType}`);
       }
@@ -287,6 +291,22 @@ export class ReportGenerator {
     };
   }
 
+  private static calculateResidentsIncomePerNursingHomeMonthly(data: any[]) {
+    const totalNursingHomes = new Set(data.map(d => d.nursingHomeId)).size;
+    const totalMonths = data.length;
+    const totalIncome = data.reduce((sum, d) => sum + d.totalIncome, 0);
+    const totalResidents = data.reduce((sum, d) => sum + d.residentCount, 0);
+
+    return {
+      totalNursingHomes,
+      totalMonths,
+      totalIncome,
+      totalResidents,
+      averageIncomePerMonth: totalMonths > 0 ? totalIncome / totalMonths : 0,
+      generatedAt: new Date().toISOString()
+    };
+  }
+
   static generatePDF(reportData: ReportData): void {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.width;
@@ -384,6 +404,8 @@ export class ReportGenerator {
         return ['Resident Name', 'Transactions', 'Total Income', 'Total Expenses', 'Net Amount'];
       case 'nursing_home_annual_financial_summary':
         return ['Nursing Home', 'Transactions', 'Total Income', 'Total Expenses', 'Net Amount'];
+      case 'residents_income_per_nursing_home_monthly':
+        return ['Nursing Home', 'Month', 'Total Residents', 'Total Income', 'Average Income per Resident'];
       default:
         return [];
     }
@@ -436,6 +458,14 @@ export class ReportGenerator {
           `$${item.totalExpenses.toLocaleString()}`,
           `$${item.netAmount.toLocaleString()}`
         ]);
+      case 'residents_income_per_nursing_home_monthly':
+        return data.map(item => [
+          item.nursingHomeName,
+          item.month,
+          item.residentCount.toString(),
+          `$${item.totalIncome.toLocaleString()}`,
+          `$${(item.totalIncome / item.residentCount).toLocaleString()}`
+        ]);
       default:
         return [];
     }
@@ -467,6 +497,12 @@ export class ReportGenerator {
           2: { halign: 'right' }, // Total Income
           3: { halign: 'right' }, // Total Expenses
           4: { halign: 'right' }, // Net Amount
+        };
+      case 'residents_income_per_nursing_home_monthly':
+        return {
+          2: { halign: 'right' }, // Total Residents
+          3: { halign: 'right' }, // Total Income
+          4: { halign: 'right' }, // Average Income per Resident
         };
       default:
         return {};
@@ -535,6 +571,15 @@ export class ReportGenerator {
           'Total Income': item.totalIncome,
           'Total Expenses': item.totalExpenses,
           'Net Amount': item.netAmount,
+        }));
+      case 'residents_income_per_nursing_home_monthly':
+        return data.map(item => ({
+          'Nursing Home': item.nursingHomeName,
+          'Month': item.month,
+          'Total Residents': item.residentCount,
+          'Total Income': item.totalIncome,
+          'Average Income per Resident': item.totalIncome / item.residentCount,
+          'Residents': item.residents.map((r: any) => `${r.name}: $${r.totalIncome}`).join('; ')
         }));
       default:
         return data;

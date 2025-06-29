@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -26,7 +27,7 @@ import { ReportFormData } from '@/types/report';
 
 const reportFormSchema = z.object({
   name: z.string().min(1, 'Report name is required'),
-  report_type: z.enum(['financial_summary', 'transaction_report', 'nursing_home_report', 'resident_report', 'resident_annual_financial_summary', 'nursing_home_annual_financial_summary']),
+  report_type: z.enum(['financial_summary', 'transaction_report', 'nursing_home_report', 'resident_report', 'resident_annual_financial_summary', 'nursing_home_annual_financial_summary', 'residents_income_per_nursing_home_monthly']),
   date_range_start: z.string().optional(),
   date_range_end: z.string().optional(),
   nursing_home_id: z.string().min(1, 'Nursing home is required'),
@@ -79,6 +80,7 @@ export function ReportConfigurationForm({ onSuccess }: ReportConfigurationFormPr
     { value: 'resident_report', label: 'Resident Report' },
     { value: 'resident_annual_financial_summary', label: 'Resident Annual Financial Summary' },
     { value: 'nursing_home_annual_financial_summary', label: 'Nursing Home Annual Financial Summary' },
+    { value: 'residents_income_per_nursing_home_monthly', label: 'Residents Income per Nursing Home Monthly' },
   ];
 
   return (
