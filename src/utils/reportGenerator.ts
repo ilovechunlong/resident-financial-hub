@@ -1,4 +1,3 @@
-
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -264,55 +263,53 @@ export class ReportGenerator {
       return [];
     }
 
-    // Group transactions by nursing home and month
+    // Group transactions by nursing home, month, and resident
     const groupedData = transactions.reduce((acc, transaction) => {
       const date = new Date(transaction.transaction_date);
       const monthKey = format(date, 'yyyy-MM');
       const nursingHomeId = transaction.nursing_home_id;
       const nursingHomeName = transaction.nursing_homes?.name || 'Unknown';
+      const residentId = transaction.resident_id;
+      const residentName = transaction.residents ? 
+        `${transaction.residents.first_name} ${transaction.residents.last_name}` : 
+        'Unknown';
       
-      const key = `${nursingHomeId}-${monthKey}`;
+      // Create a unique key for each nursing home + month + resident combination
+      const key = `${nursingHomeId}-${monthKey}-${residentId}`;
       
       if (!acc[key]) {
         acc[key] = {
           nursingHomeId,
           nursingHomeName,
           month: format(date, 'MMM yyyy'),
+          monthSort: monthKey,
+          residentId,
+          residentName,
           totalIncome: 0,
-          residentCount: 0,
-          residents: new Map(),
+          transactionCount: 0,
         };
       }
       
       acc[key].totalIncome += Number(transaction.amount);
-      
-      // Track residents and their income
-      const residentId = transaction.resident_id;
-      const residentName = transaction.residents ? 
-        `${transaction.residents.first_name} ${transaction.residents.last_name}` : 
-        'Unknown';
-      
-      if (!acc[key].residents.has(residentId)) {
-        acc[key].residents.set(residentId, {
-          name: residentName,
-          totalIncome: 0,
-        });
-      }
-      
-      acc[key].residents.get(residentId).totalIncome += Number(transaction.amount);
+      acc[key].transactionCount += 1;
       
       return acc;
     }, {} as Record<string, any>);
 
-    // Convert to array format
-    return Object.values(groupedData).map((item: any) => ({
-      nursingHomeId: item.nursingHomeId,
-      nursingHomeName: item.nursingHomeName,
-      month: item.month,
-      totalIncome: item.totalIncome,
-      residentCount: item.residents.size,
-      residents: Array.from(item.residents.values()),
-    }));
+    // Convert to array format and sort by nursing home, then month, then resident
+    return Object.values(groupedData)
+      .sort((a: any, b: any) => {
+        // First sort by nursing home name
+        if (a.nursingHomeName !== b.nursingHomeName) {
+          return a.nursingHomeName.localeCompare(b.nursingHomeName);
+        }
+        // Then by month
+        if (a.monthSort !== b.monthSort) {
+          return a.monthSort.localeCompare(b.monthSort);
+        }
+        // Finally by resident name
+        return a.residentName.localeCompare(b.residentName);
+      });
   }
 
   private static calculateFinancialSummary(data: any[]) {
@@ -380,16 +377,18 @@ export class ReportGenerator {
 
   private static calculateResidentsIncomePerNursingHomeMonthly(data: any[]) {
     const totalNursingHomes = new Set(data.map(d => d.nursingHomeId)).size;
-    const totalMonths = data.length;
+    const totalResidents = new Set(data.map(d => d.residentId)).size;
+    const totalRecords = data.length;
     const totalIncome = data.reduce((sum, d) => sum + d.totalIncome, 0);
-    const totalResidents = data.reduce((sum, d) => sum + d.residentCount, 0);
+    const totalTransactions = data.reduce((sum, d) => sum + d.transactionCount, 0);
 
     return {
       totalNursingHomes,
-      totalMonths,
-      totalIncome,
       totalResidents,
-      averageIncomePerMonth: totalMonths > 0 ? totalIncome / totalMonths : 0,
+      totalRecords,
+      totalIncome,
+      totalTransactions,
+      averageIncomePerRecord: totalRecords > 0 ? totalIncome / totalRecords : 0,
       generatedAt: new Date().toISOString()
     };
   }
@@ -492,7 +491,7 @@ export class ReportGenerator {
       case 'nursing_home_annual_financial_summary':
         return ['Nursing Home', 'Transactions', 'Total Income', 'Total Expenses', 'Net Amount'];
       case 'residents_income_per_nursing_home_monthly':
-        return ['Nursing Home', 'Month', 'Total Residents', 'Total Income', 'Average Income per Resident'];
+        return ['Nursing Home', 'Month', 'Resident Name', 'Total Income', 'Transaction Count'];
       default:
         return [];
     }
@@ -549,9 +548,9 @@ export class ReportGenerator {
         return data.map(item => [
           item.nursingHomeName,
           item.month,
-          item.residentCount.toString(),
+          item.residentName,
           `$${item.totalIncome.toLocaleString()}`,
-          `$${(item.totalIncome / item.residentCount).toLocaleString()}`
+          item.transactionCount.toString()
         ]);
       default:
         return [];
@@ -587,9 +586,8 @@ export class ReportGenerator {
         };
       case 'residents_income_per_nursing_home_monthly':
         return {
-          2: { halign: 'right' }, // Total Residents
           3: { halign: 'right' }, // Total Income
-          4: { halign: 'right' }, // Average Income per Resident
+          4: { halign: 'right' }, // Transaction Count
         };
       default:
         return {};
@@ -663,10 +661,9 @@ export class ReportGenerator {
         return data.map(item => ({
           'Nursing Home': item.nursingHomeName,
           'Month': item.month,
-          'Total Residents': item.residentCount,
+          'Resident Name': item.residentName,
           'Total Income': item.totalIncome,
-          'Average Income per Resident': item.totalIncome / item.residentCount,
-          'Residents': item.residents.map((r: any) => `${r.name}: $${r.totalIncome}`).join('; ')
+          'Transaction Count': item.transactionCount,
         }));
       default:
         return data;
