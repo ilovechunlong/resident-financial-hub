@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import {
@@ -22,7 +21,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import { useGeneratedReports } from '@/hooks/useReports';
+import { useGeneratedReports } from '@/hooks/useGeneratedReports';
 
 export function GeneratedReportsList() {
   const [currentPage, setCurrentPage] = useState(1);

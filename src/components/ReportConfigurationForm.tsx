@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,7 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useCreateReportConfiguration } from '@/hooks/useReports';
+import { useCreateReportConfiguration } from '@/hooks/useCreateReportConfiguration';
 import { useNursingHomes } from '@/hooks/useNursingHomes';
 import { ReportFormData } from '@/types/report';
 

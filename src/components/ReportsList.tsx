@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import {
@@ -22,7 +21,8 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import { useReportConfigurations, useGenerateReport } from '@/hooks/useReports';
+import { useReportConfigurations } from '@/hooks/useReportConfigurations';
+import { useGenerateReport } from '@/hooks/useGenerateReport';
 import { useNursingHomes } from '@/hooks/useNursingHomes';
 import { ReportExportButton } from '@/components/ReportExportButton';
 
