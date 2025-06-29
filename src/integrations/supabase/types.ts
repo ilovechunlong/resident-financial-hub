@@ -253,6 +253,7 @@ export type Database = {
           filters: Json | null
           id: string
           name: string
+          nursing_home_id: string | null
           report_type: string
           updated_at: string
         }
@@ -263,6 +264,7 @@ export type Database = {
           filters?: Json | null
           id?: string
           name: string
+          nursing_home_id?: string | null
           report_type: string
           updated_at?: string
         }
@@ -273,10 +275,19 @@ export type Database = {
           filters?: Json | null
           id?: string
           name?: string
+          nursing_home_id?: string | null
           report_type?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "report_configurations_nursing_home_id_fkey"
+            columns: ["nursing_home_id"]
+            isOneToOne: false
+            referencedRelation: "nursing_homes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       residents: {
         Row: {

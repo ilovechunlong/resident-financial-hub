@@ -31,7 +31,7 @@ export function ReportsList() {
   const limit = 10;
   
   const { data: reportConfigurationsData, isLoading } = useReportConfigurations({ page: currentPage, limit });
-  const { data: nursingHomes } = useNursingHomes();
+  const { nursingHomes } = useNursingHomes();
   const generateReportMutation = useGenerateReport();
 
   const handleGenerateReport = (configurationId: string) => {

@@ -41,7 +41,7 @@ interface ReportConfigurationFormProps {
 
 export function ReportConfigurationForm({ onSuccess }: ReportConfigurationFormProps) {
   const createReportMutation = useCreateReportConfiguration();
-  const { data: nursingHomes, isLoading: nursingHomesLoading } = useNursingHomes();
+  const { nursingHomes, loading: nursingHomesLoading } = useNursingHomes();
 
   const form = useForm<ReportFormValues>({
     resolver: zodResolver(reportFormSchema),
