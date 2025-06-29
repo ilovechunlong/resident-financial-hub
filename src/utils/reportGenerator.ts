@@ -228,6 +228,92 @@ export class ReportGenerator {
     });
   }
 
+  private static async getResidentsIncomePerNursingHomeMonthlyData(dateRange?: { start?: string; end?: string }) {
+    // Fetch transactions with nursing home and resident data
+    let transactionQuery = supabase
+      .from('financial_transactions')
+      .select(`
+        *,
+        nursing_homes (
+          id,
+          name
+        ),
+        residents (
+          id,
+          first_name,
+          last_name,
+          nursing_home_id
+        )
+      `)
+      .eq('transaction_type', 'income')
+      .not('nursing_home_id', 'is', null)
+      .not('resident_id', 'is', null);
+
+    if (dateRange?.start) {
+      transactionQuery = transactionQuery.gte('transaction_date', dateRange.start);
+    }
+    if (dateRange?.end) {
+      transactionQuery = transactionQuery.lte('transaction_date', dateRange.end);
+    }
+
+    const { data: transactions, error: transactionsError } = await transactionQuery;
+    if (transactionsError) throw transactionsError;
+
+    if (!transactions || transactions.length === 0) {
+      return [];
+    }
+
+    // Group transactions by nursing home and month
+    const groupedData = transactions.reduce((acc, transaction) => {
+      const date = new Date(transaction.transaction_date);
+      const monthKey = format(date, 'yyyy-MM');
+      const nursingHomeId = transaction.nursing_home_id;
+      const nursingHomeName = transaction.nursing_homes?.name || 'Unknown';
+      
+      const key = `${nursingHomeId}-${monthKey}`;
+      
+      if (!acc[key]) {
+        acc[key] = {
+          nursingHomeId,
+          nursingHomeName,
+          month: format(date, 'MMM yyyy'),
+          totalIncome: 0,
+          residentCount: 0,
+          residents: new Map(),
+        };
+      }
+      
+      acc[key].totalIncome += parseFloat(transaction.amount);
+      
+      // Track residents and their income
+      const residentId = transaction.resident_id;
+      const residentName = transaction.residents ? 
+        `${transaction.residents.first_name} ${transaction.residents.last_name}` : 
+        'Unknown';
+      
+      if (!acc[key].residents.has(residentId)) {
+        acc[key].residents.set(residentId, {
+          name: residentName,
+          totalIncome: 0,
+        });
+      }
+      
+      acc[key].residents.get(residentId).totalIncome += parseFloat(transaction.amount);
+      
+      return acc;
+    }, {} as Record<string, any>);
+
+    // Convert to array format
+    return Object.values(groupedData).map((item: any) => ({
+      nursingHomeId: item.nursingHomeId,
+      nursingHomeName: item.nursingHomeName,
+      month: item.month,
+      totalIncome: item.totalIncome,
+      residentCount: item.residents.size,
+      residents: Array.from(item.residents.values()),
+    }));
+  }
+
   private static calculateFinancialSummary(data: any[]) {
     const totalIncome = data
       .filter(t => t.transaction_type === 'income')
