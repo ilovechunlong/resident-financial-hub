@@ -1,7 +1,7 @@
+
 import React from 'react';
 import { ReportConfigurationForm } from '@/components/ReportConfigurationForm';
 import { ReportsList } from '@/components/ReportsList';
-import { GeneratedReportsList } from '@/components/GeneratedReportsList';
 
 export default function Reports() {
   return (
@@ -14,8 +14,6 @@ export default function Reports() {
           <ReportsList />
         </div>
       </div>
-
-      <GeneratedReportsList />
     </div>
   );
 }
