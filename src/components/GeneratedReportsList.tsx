@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import {
@@ -233,7 +234,7 @@ export function GeneratedReportsList() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Generated Reports</CardTitle>
+          <CardTitle>Report Configurations</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-6">
@@ -251,7 +252,7 @@ export function GeneratedReportsList() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Generated Reports ({generatedReportsData.total} total)</CardTitle>
+        <CardTitle>Report Configurations ({generatedReportsData.total} total)</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-4">
