@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import {
@@ -38,6 +37,7 @@ import { useDeleteGeneratedReport } from '@/hooks/useDeleteGeneratedReport';
 
 export function GeneratedReportsList() {
   const [currentPage, setCurrentPage] = useState(1);
+  const [expandedReports, setExpandedReports] = useState<Set<string>>(new Set());
   const limit = 10;
   
   const { data: generatedReportsData, isLoading } = useGeneratedReports(undefined, { page: currentPage, limit });
@@ -60,6 +60,16 @@ export function GeneratedReportsList() {
     deleteReportMutation.mutate(reportId);
   };
 
+  const toggleReportExpansion = (reportId: string) => {
+    const newExpanded = new Set(expandedReports);
+    if (newExpanded.has(reportId)) {
+      newExpanded.delete(reportId);
+    } else {
+      newExpanded.add(reportId);
+    }
+    setExpandedReports(newExpanded);
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed': return 'default';
@@ -67,6 +77,68 @@ export function GeneratedReportsList() {
       case 'failed': return 'destructive';
       default: return 'secondary';
     }
+  };
+
+  const renderReportPreview = (report: any) => {
+    const isExpanded = expandedReports.has(report.id);
+    
+    if (!isExpanded || report.status !== 'completed') return null;
+
+    const reportData = report.report_data;
+    const reportType = reportData.report_type;
+
+    if (reportType === 'residents_income_per_nursing_home_monthly') {
+      return (
+        <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+          <h4 className="font-semibold mb-3">Report Preview</h4>
+          <div className="space-y-4 max-h-96 overflow-y-auto">
+            {reportData.data?.map((item: any, index: number) => (
+              <div key={`${item.nursingHomeId}-${item.monthSort}`} className="border rounded-lg p-3 bg-white">
+                <div className="flex justify-between items-center mb-2">
+                  <h5 className="font-semibold text-lg">{item.nursingHomeName}</h5>
+                  <Badge variant="outline">{item.month}</Badge>
+                </div>
+                
+                <div className="mb-3 p-2 bg-blue-50 rounded">
+                  <div className="flex justify-between text-sm">
+                    <span className="font-medium">Monthly Total:</span>
+                    <span className="font-semibold">${item.totalIncome.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>Transactions:</span>
+                    <span>{item.totalTransactions}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <h6 className="font-medium text-sm text-gray-700 mb-2">Resident Breakdown:</h6>
+                  {item.residentBreakdown?.map((resident: any) => (
+                    <div key={resident.residentId} className="flex justify-between text-sm py-1 px-2 bg-gray-50 rounded">
+                      <span>{resident.residentName}</span>
+                      <div className="flex gap-4">
+                        <span>${resident.totalIncome.toLocaleString()}</span>
+                        <span className="text-gray-500">({resident.transactionCount} transactions)</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // Default preview for other report types
+    return (
+      <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+        <h4 className="font-semibold mb-2">Report Preview</h4>
+        <div className="text-sm text-gray-600">
+          <p>Total Records: {reportData.total_records || 'N/A'}</p>
+          <p>Generated: {format(new Date(reportData.generated_at), 'MMM dd, yyyy HH:mm')}</p>
+        </div>
+      </div>
+    );
   };
 
   const renderPagination = () => {
@@ -182,32 +254,32 @@ export function GeneratedReportsList() {
         <CardTitle>Generated Reports ({generatedReportsData.total} total)</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Report ID</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Generated At</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {generatedReports.map((report) => (
-              <TableRow key={report.id}>
-                <TableCell className="font-mono text-sm">{report.id.slice(0, 8)}...</TableCell>
-                <TableCell>
-                  <Badge variant={getStatusColor(report.status)}>
-                    {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <span className="text-sm">
-                    {format(new Date(report.generated_at), 'MMM dd, yyyy HH:mm')}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-2">
-                    {report.status === 'completed' && (
+        <div className="space-y-4">
+          {generatedReports.map((report) => (
+            <div key={report.id} className="border rounded-lg p-4">
+              <div className="flex justify-between items-center">
+                <div className="flex-1">
+                  <div className="flex items-center gap-4">
+                    <span className="font-mono text-sm">{report.id.slice(0, 8)}...</span>
+                    <Badge variant={getStatusColor(report.status)}>
+                      {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
+                    </Badge>
+                    <span className="text-sm text-gray-600">
+                      {format(new Date(report.generated_at), 'MMM dd, yyyy HH:mm')}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="flex gap-2">
+                  {report.status === 'completed' && (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => toggleReportExpansion(report.id)}
+                      >
+                        {expandedReports.has(report.id) ? 'Hide' : 'Preview'}
+                      </Button>
                       <Button
                         size="sm"
                         variant="outline"
@@ -216,42 +288,44 @@ export function GeneratedReportsList() {
                         <DownloadIcon className="h-4 w-4 mr-2" />
                         Download
                       </Button>
-                    )}
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-destructive hover:text-destructive"
+                    </>
+                  )}
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2Icon className="h-4 w-4 mr-2" />
+                        Delete
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Generated Report</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete this generated report? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDeleteReport(report.id)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
-                          <Trash2Icon className="h-4 w-4 mr-2" />
                           Delete
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Generated Report</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to delete this generated report? This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleDeleteReport(report.id)}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+
+              {renderReportPreview(report)}
+            </div>
+          ))}
+        </div>
 
         {renderPagination()}
       </CardContent>
