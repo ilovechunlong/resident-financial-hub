@@ -9,7 +9,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Plus } from 'lucide-react';
-import { FinancialSummary } from '@/components/FinancialSummary';
 import { FinancialTransactionForm } from '@/components/FinancialTransactionForm';
 import { FinancialTransactionsList } from '@/components/FinancialTransactionsList';
 
@@ -31,19 +30,11 @@ export default function Finances() {
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Add New Transaction</DialogTitle>
-              <DialogDescription>
-                Record a new financial transaction for your care home.
-              </DialogDescription>
-            </DialogHeader>
             <FinancialTransactionForm onSuccess={handleFormSuccess} />
           </DialogContent>
         </Dialog>
       </div>
 
-      <FinancialSummary />
-      
       <FinancialTransactionsList />
     </div>
   );

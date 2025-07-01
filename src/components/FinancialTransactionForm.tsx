@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,7 +18,6 @@ import { FinancialTransactionFormData } from '@/types/financial';
 import { financialTransactionFormSchema, FinancialTransactionFormValues } from './forms/financialTransactionFormSchema';
 import { BasicTransactionFields } from './forms/BasicTransactionFields';
 import { AdditionalDetailsFields } from './forms/AdditionalDetailsFields';
-import { RecurringTransactionFields } from './forms/RecurringTransactionFields';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface FinancialTransactionFormProps {
@@ -38,13 +36,12 @@ export function FinancialTransactionForm({ onSuccess }: FinancialTransactionForm
       transaction_type: 'income',
       transaction_date: new Date().toISOString().split('T')[0],
       status: 'completed',
-      is_recurring: false,
     },
   });
 
   const watchTransactionType = form.watch('transaction_type');
-  const watchIsRecurring = form.watch('is_recurring');
   const watchResidentId = form.watch('resident_id');
+  const watchNursingHomeId = form.watch('nursing_home_id');
 
   const transactionScope = watchResidentId ? 'resident' : 'nursing_home';
 
@@ -57,6 +54,12 @@ export function FinancialTransactionForm({ onSuccess }: FinancialTransactionForm
     }
   }, [watchResidentId, residents, form]);
 
+  useEffect(() => {
+    if (watchNursingHomeId && !watchResidentId && watchTransactionType !== 'expense') {
+      form.setValue('transaction_type', 'expense', { shouldValidate: true });
+    }
+  }, [watchNursingHomeId, watchResidentId, watchTransactionType, form]);
+
   const onSubmit = async (values: FinancialTransactionFormValues) => {
     const transactionData: FinancialTransactionFormData = {
       transaction_type: values.transaction_type,
@@ -68,8 +71,6 @@ export function FinancialTransactionForm({ onSuccess }: FinancialTransactionForm
       reference_number: values.reference_number || undefined,
       nursing_home_id: values.nursing_home_id || undefined,
       resident_id: values.resident_id || undefined,
-      is_recurring: values.is_recurring || false,
-      recurring_frequency: values.is_recurring ? values.recurring_frequency : undefined,
       status: values.status,
     };
 
@@ -153,11 +154,6 @@ export function FinancialTransactionForm({ onSuccess }: FinancialTransactionForm
             </div>
 
             <AdditionalDetailsFields form={form} />
-
-            <RecurringTransactionFields 
-              form={form} 
-              watchIsRecurring={watchIsRecurring} 
-            />
 
             <Button type="submit" className="w-full" disabled={addTransaction.isPending}>
               {addTransaction.isPending ? 'Adding Transaction...' : 'Add Transaction'}

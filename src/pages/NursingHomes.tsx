@@ -5,12 +5,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { NursingHomeForm } from '@/components/NursingHomeForm';
 import { useNursingHomes } from '@/hooks/useNursingHomes';
+import { useResidents } from '@/hooks/useResidents';
 import { NursingHome } from '@/types/nursingHome';
 
 export default function NursingHomes() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingHome, setEditingHome] = useState<NursingHome | undefined>();
   const { nursingHomes, loading, addNursingHome, updateNursingHome, deleteNursingHome } = useNursingHomes();
+  const { residents, loading: residentsLoading } = useResidents();
+
+  // Map of nursing_home_id to active resident count
+  const residentCountMap: Record<string, number> = {};
+  residents?.forEach(resident => {
+    if (resident.status === 'active' && resident.nursing_home_id) {
+      residentCountMap[resident.nursing_home_id] = (residentCountMap[resident.nursing_home_id] || 0) + 1;
+    }
+  });
 
   const handleEdit = (home: NursingHome) => {
     setEditingHome(home);
@@ -38,7 +48,7 @@ export default function NursingHomes() {
     setEditingHome(undefined);
   };
 
-  if (loading) {
+  if (loading || residentsLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex items-center gap-2">
@@ -48,6 +58,11 @@ export default function NursingHomes() {
       </div>
     );
   }
+
+  // Calculate total occupied beds and occupancy rate
+  const totalCapacity = nursingHomes.reduce((sum, home) => sum + home.capacity, 0);
+  const totalOccupiedBeds = nursingHomes.reduce((sum, home) => sum + (residentCountMap[home.id] || 0), 0);
+  const occupancyRate = totalCapacity > 0 ? Math.round((totalOccupiedBeds / totalCapacity) * 100) : 0;
 
   return (
     <div className="space-y-6">
@@ -74,9 +89,7 @@ export default function NursingHomes() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {nursingHomes.reduce((sum, home) => sum + home.capacity, 0)}
-            </div>
+            <div className="text-2xl font-bold">{totalCapacity}</div>
           </CardContent>
         </Card>
         <Card>
@@ -85,9 +98,7 @@ export default function NursingHomes() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {nursingHomes.reduce((sum, home) => sum + home.current_residents, 0)}
-            </div>
+            <div className="text-2xl font-bold">{totalOccupiedBeds}</div>
           </CardContent>
         </Card>
         <Card>
@@ -96,12 +107,7 @@ export default function NursingHomes() {
             <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {nursingHomes.length > 0 
-                ? Math.round((nursingHomes.reduce((sum, home) => sum + home.current_residents, 0) / 
-                   nursingHomes.reduce((sum, home) => sum + home.capacity, 0)) * 100)
-                : 0}%
-            </div>
+            <div className="text-2xl font-bold">{occupancyRate}%</div>
           </CardContent>
         </Card>
       </div>
@@ -159,11 +165,11 @@ export default function NursingHomes() {
                     <TableCell>{home.capacity}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <span>{home.current_residents}/{home.capacity}</span>
+                        <span>{residentCountMap[home.id] || 0}/{home.capacity}</span>
                         <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
                           <div 
                             className="h-full bg-healthcare-primary rounded-full"
-                            style={{ width: `${(home.current_residents / home.capacity) * 100}%` }}
+                            style={{ width: `${home.capacity > 0 ? ((residentCountMap[home.id] || 0) / home.capacity) * 100 : 0}%` }}
                           />
                         </div>
                       </div>

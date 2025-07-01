@@ -1,4 +1,3 @@
-
 export interface NursingHome {
   id: string;
   name: string;
@@ -9,7 +8,6 @@ export interface NursingHome {
   phone_number: string;
   email: string;
   capacity: number;
-  current_residents: number;
   status: 'active' | 'inactive' | 'maintenance';
   administrator: string;
   license_number: string;
@@ -31,7 +29,6 @@ export interface NursingHomeFormData {
   phone_number: string;
   email: string;
   capacity: number;
-  current_residents: number;
   status: 'active' | 'inactive' | 'maintenance';
   administrator: string;
   license_number: string;

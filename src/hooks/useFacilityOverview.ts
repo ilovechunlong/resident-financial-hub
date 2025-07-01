@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -15,25 +14,48 @@ export const useFacilityOverview = () => {
     queryKey: ['facility-overview'],
     queryFn: async (): Promise<FacilityOverview[]> => {
       console.log('Fetching facility overview...');
-      
-      const { data: nursingHomes, error } = await supabase
+
+      // Fetch all active nursing homes
+      const { data: nursingHomes, error: nhError } = await supabase
         .from('nursing_homes')
-        .select('id, name, capacity, current_residents')
+        .select('id, name, capacity')
         .eq('status', 'active')
         .order('name');
 
-      if (error) {
-        console.error('Error fetching nursing homes:', error);
-        throw error;
+      if (nhError) {
+        console.error('Error fetching nursing homes:', nhError);
+        throw nhError;
       }
 
-      const facilities = nursingHomes?.map(home => ({
-        id: home.id,
-        name: home.name,
-        currentResidents: home.current_residents || 0,
-        capacity: home.capacity,
-        occupancyRate: home.capacity > 0 ? Math.round((home.current_residents || 0) / home.capacity * 100) : 0,
-      })) || [];
+      // Fetch all active residents
+      const { data: residents, error: resError } = await supabase
+        .from('residents')
+        .select('id, nursing_home_id, status')
+        .eq('status', 'active');
+
+      if (resError) {
+        console.error('Error fetching residents:', resError);
+        throw resError;
+      }
+
+      // Count residents per facility
+      const residentCountMap: Record<string, number> = {};
+      residents?.forEach(resident => {
+        if (resident.nursing_home_id) {
+          residentCountMap[resident.nursing_home_id] = (residentCountMap[resident.nursing_home_id] || 0) + 1;
+        }
+      });
+
+      const facilities = nursingHomes?.map(home => {
+        const currentResidents = residentCountMap[home.id] || 0;
+        return {
+          id: home.id,
+          name: home.name,
+          currentResidents,
+          capacity: home.capacity,
+          occupancyRate: home.capacity > 0 ? Math.round((currentResidents / home.capacity) * 100) : 0,
+        };
+      }) || [];
 
       console.log('Facility overview fetched:', facilities);
       return facilities;
