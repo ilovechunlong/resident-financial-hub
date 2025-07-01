@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useGeneratedReports } from '@/hooks/useGeneratedReports';
 import { useDeleteGeneratedReport } from '@/hooks/useDeleteGeneratedReport';
+import { ResidentDetail, MonthlyIncomeReportItem } from '@/types/reportTypes';
 
 export function GeneratedReportsList() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -104,7 +105,7 @@ export function GeneratedReportsList() {
         <div className="mt-4 p-4 bg-gray-50 rounded-lg">
           <h4 className="font-semibold mb-3">Detailed Report Preview</h4>
           <div className="space-y-4 max-h-96 overflow-y-auto">
-            {reportData.data?.map((item: any, index: number) => (
+            {reportData.data?.map((item: MonthlyIncomeReportItem, index: number) => (
               <div key={`${item.nursingHomeId}-${item.monthSort}`} className="border rounded-lg p-3 bg-white">
                 <div className="flex justify-between items-center mb-2">
                   <h5 className="font-semibold text-lg">{item.nursingHomeName}</h5>
@@ -124,7 +125,7 @@ export function GeneratedReportsList() {
 
                 <div className="space-y-2">
                   <h6 className="font-medium text-sm text-gray-700 mb-2">Resident Details:</h6>
-                  {item.residentDetails?.map((resident: any) => {
+                  {item.residentDetails?.map((resident: ResidentDetail) => {
                     const residentKey = `${resident.residentId}-${item.monthSort}`;
                     const isResidentExpanded = expandedResidents.has(residentKey);
                     
@@ -163,10 +164,10 @@ export function GeneratedReportsList() {
                               <strong>Expected Income Types:</strong> {resident.expectedIncomeTypes.join(', ') || 'None specified'}
                             </div>
                             
-                            {resident.transactions && resident.transactions.length > 0 ? (
+                            {resident.actualTransactions && resident.actualTransactions.length > 0 ? (
                               <div className="space-y-1">
                                 <div className="text-xs font-medium text-gray-700">Individual Transactions:</div>
-                                {resident.transactions.map((transaction: any) => (
+                                {resident.actualTransactions.map((transaction) => (
                                   <div key={transaction.id} className="bg-gray-50 p-2 rounded text-xs">
                                     <div className="flex justify-between items-start">
                                       <div>

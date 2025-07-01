@@ -3,6 +3,7 @@ import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
+import { ResidentDetail, ResidentTransaction, MonthlyIncomeReportItem } from '@/types/reportTypes';
 
 export interface ReportData {
   id: string;
@@ -267,7 +268,7 @@ export class ReportGenerator {
     if (transactionsError) throw transactionsError;
 
     // Create a comprehensive analysis by nursing home and month
-    const analysisMap = new Map();
+    const analysisMap = new Map<string, MonthlyIncomeReportItem>();
 
     // Generate months in the date range
     const startDate = dateRange?.start ? new Date(dateRange.start) : new Date(new Date().getFullYear(), 0, 1);
@@ -301,14 +302,15 @@ export class ReportGenerator {
             monthSort: monthKey,
             totalIncome: 0,
             totalTransactions: 0,
-            residents: new Map()
+            residentDetails: []
           });
         }
 
-        const nhMonthData = analysisMap.get(nhMonthKey);
+        const nhMonthData = analysisMap.get(nhMonthKey)!;
         
-        if (!nhMonthData.residents.has(resident.id)) {
-          nhMonthData.residents.set(resident.id, {
+        const existingResident = nhMonthData.residentDetails.find(r => r.residentId === resident.id);
+        if (!existingResident) {
+          nhMonthData.residentDetails.push({
             residentId: resident.id,
             residentName,
             expectedIncomeTypes,
@@ -333,9 +335,9 @@ export class ReportGenerator {
         const nhMonthData = analysisMap.get(nhMonthKey);
         
         if (nhMonthData) {
-          const residentData = nhMonthData.residents.get(resident.id);
+          const residentData = nhMonthData.residentDetails.find(r => r.residentId === resident.id);
           if (residentData) {
-            residentData.actualTransactions.push({
+            const transactionData: ResidentTransaction = {
               id: transaction.id,
               date: transaction.transaction_date,
               amount: Number(transaction.amount),
@@ -343,7 +345,9 @@ export class ReportGenerator {
               description: transaction.description,
               paymentMethod: transaction.payment_method,
               referenceNumber: transaction.reference_number
-            });
+            };
+            
+            residentData.actualTransactions.push(transactionData);
             residentData.totalIncome += Number(transaction.amount);
             residentData.transactionCount += 1;
             
@@ -356,7 +360,7 @@ export class ReportGenerator {
 
     // Detect missing income types
     analysisMap.forEach(nhMonthData => {
-      nhMonthData.residents.forEach(residentData => {
+      nhMonthData.residentDetails.forEach(residentData => {
         const actualCategories = residentData.actualTransactions.map(t => t.category.toLowerCase());
         const expectedTypes = residentData.expectedIncomeTypes.map((type: string) => type.toLowerCase());
         
@@ -378,7 +382,7 @@ export class ReportGenerator {
       monthSort: nhMonth.monthSort,
       totalIncome: nhMonth.totalIncome,
       totalTransactions: nhMonth.totalTransactions,
-      residentDetails: Array.from(nhMonth.residents.values()).map(resident => ({
+      residentDetails: nhMonth.residentDetails.map(resident => ({
         residentId: resident.residentId,
         residentName: resident.residentName,
         expectedIncomeTypes: resident.expectedIncomeTypes,
@@ -790,6 +794,7 @@ export class ReportGenerator {
         data.forEach(item => {
           item.residentDetails.forEach((resident: any) => {
             if (resident.transactions.length > 0) {
+              // Add individual transaction rows
               resident.transactions.forEach((transaction: any) => {
                 excelData.push({
                   'Nursing Home': item.nursingHomeName,
@@ -807,6 +812,7 @@ export class ReportGenerator {
                 });
               });
             } else {
+              // Add row for residents with no transactions
               excelData.push({
                 'Nursing Home': item.nursingHomeName,
                 'Month': item.month,
