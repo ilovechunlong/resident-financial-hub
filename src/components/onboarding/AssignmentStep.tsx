@@ -57,7 +57,7 @@ export function AssignmentStep({ formData, updateFormData, nursingHomes }: Assig
                 </div>
                 <div>
                   <span className="text-gray-600">Capacity:</span>
-                  <p className="font-medium">{selectedHome.current_residents}/{selectedHome.capacity} residents</p>
+                  <p className="font-medium">{selectedHome.capacity} residents</p>
                 </div>
                 <div>
                   <span className="text-gray-600">Address:</span>
