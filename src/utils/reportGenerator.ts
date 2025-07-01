@@ -229,25 +229,32 @@ export class ReportGenerator {
   }
 
   private static async getResidentsIncomePerNursingHomeMonthlyData(dateRange?: { start?: string; end?: string }) {
-    // Fetch transactions with nursing home and resident data
-    let transactionQuery = supabase
-      .from('financial_transactions')
+    // First, get all residents with their income types and nursing home info
+    const { data: residents, error: residentsError } = await supabase
+      .from('residents')
       .select(`
-        *,
+        id,
+        first_name,
+        last_name,
+        nursing_home_id,
+        income_types,
         nursing_homes (
           id,
           name
-        ),
-        residents (
-          id,
-          first_name,
-          last_name,
-          nursing_home_id
         )
       `)
+      .not('nursing_home_id', 'is', null);
+
+    if (residentsError) throw residentsError;
+    if (!residents || residents.length === 0) return [];
+
+    // Get all income transactions for these residents
+    let transactionQuery = supabase
+      .from('financial_transactions')
+      .select('*')
       .eq('transaction_type', 'income')
-      .not('nursing_home_id', 'is', null)
-      .not('resident_id', 'is', null);
+      .not('resident_id', 'is', null)
+      .in('resident_id', residents.map(r => r.id));
 
     if (dateRange?.start) {
       transactionQuery = transactionQuery.gte('transaction_date', dateRange.start);
@@ -259,70 +266,134 @@ export class ReportGenerator {
     const { data: transactions, error: transactionsError } = await transactionQuery;
     if (transactionsError) throw transactionsError;
 
-    if (!transactions || transactions.length === 0) {
-      return [];
+    // Create a comprehensive analysis by nursing home and month
+    const analysisMap = new Map();
+
+    // Generate months in the date range
+    const startDate = dateRange?.start ? new Date(dateRange.start) : new Date(new Date().getFullYear(), 0, 1);
+    const endDate = dateRange?.end ? new Date(dateRange.end) : new Date();
+    
+    const months = [];
+    const current = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+    while (current <= endDate) {
+      months.push({
+        monthKey: format(current, 'yyyy-MM'),
+        monthDisplay: format(current, 'MMM yyyy')
+      });
+      current.setMonth(current.getMonth() + 1);
     }
 
-    // Group transactions by nursing home and month
-    const groupedByNursingHomeAndMonth = transactions.reduce((acc, transaction) => {
+    // Process each nursing home and month combination
+    residents.forEach(resident => {
+      const nursingHomeId = resident.nursing_home_id;
+      const nursingHomeName = resident.nursing_homes?.name || 'Unknown';
+      const residentName = `${resident.first_name} ${resident.last_name}`;
+      const expectedIncomeTypes = resident.income_types || [];
+
+      months.forEach(({ monthKey, monthDisplay }) => {
+        const nhMonthKey = `${nursingHomeId}-${monthKey}`;
+        
+        if (!analysisMap.has(nhMonthKey)) {
+          analysisMap.set(nhMonthKey, {
+            nursingHomeId,
+            nursingHomeName,
+            month: monthDisplay,
+            monthSort: monthKey,
+            totalIncome: 0,
+            totalTransactions: 0,
+            residents: new Map()
+          });
+        }
+
+        const nhMonthData = analysisMap.get(nhMonthKey);
+        
+        if (!nhMonthData.residents.has(resident.id)) {
+          nhMonthData.residents.set(resident.id, {
+            residentId: resident.id,
+            residentName,
+            expectedIncomeTypes,
+            actualTransactions: [],
+            missingIncomeTypes: [],
+            totalIncome: 0,
+            transactionCount: 0,
+            hasIncomeIssues: false
+          });
+        }
+      });
+    });
+
+    // Process actual transactions
+    (transactions || []).forEach(transaction => {
       const date = new Date(transaction.transaction_date);
       const monthKey = format(date, 'yyyy-MM');
-      const nursingHomeId = transaction.nursing_home_id;
-      const nursingHomeName = transaction.nursing_homes?.name || 'Unknown';
+      const resident = residents.find(r => r.id === transaction.resident_id);
       
-      // Create nursing home + month key
-      const nhMonthKey = `${nursingHomeId}-${monthKey}`;
-      
-      if (!acc[nhMonthKey]) {
-        acc[nhMonthKey] = {
-          nursingHomeId,
-          nursingHomeName,
-          month: format(date, 'MMM yyyy'),
-          monthSort: monthKey,
-          totalIncome: 0,
-          totalTransactions: 0,
-          residents: {}
-        };
+      if (resident) {
+        const nhMonthKey = `${resident.nursing_home_id}-${monthKey}`;
+        const nhMonthData = analysisMap.get(nhMonthKey);
+        
+        if (nhMonthData) {
+          const residentData = nhMonthData.residents.get(resident.id);
+          if (residentData) {
+            residentData.actualTransactions.push({
+              id: transaction.id,
+              date: transaction.transaction_date,
+              amount: Number(transaction.amount),
+              category: transaction.category,
+              description: transaction.description,
+              paymentMethod: transaction.payment_method,
+              referenceNumber: transaction.reference_number
+            });
+            residentData.totalIncome += Number(transaction.amount);
+            residentData.transactionCount += 1;
+            
+            nhMonthData.totalIncome += Number(transaction.amount);
+            nhMonthData.totalTransactions += 1;
+          }
+        }
       }
-      
-      // Add to nursing home totals
-      acc[nhMonthKey].totalIncome += Number(transaction.amount);
-      acc[nhMonthKey].totalTransactions += 1;
-      
-      // Group by resident within this nursing home/month
-      const residentId = transaction.resident_id;
-      const residentName = transaction.residents ? 
-        `${transaction.residents.first_name} ${transaction.residents.last_name}` : 
-        'Unknown';
-      
-      if (!acc[nhMonthKey].residents[residentId]) {
-        acc[nhMonthKey].residents[residentId] = {
-          residentId,
-          residentName,
-          totalIncome: 0,
-          transactionCount: 0,
-        };
-      }
-      
-      acc[nhMonthKey].residents[residentId].totalIncome += Number(transaction.amount);
-      acc[nhMonthKey].residents[residentId].transactionCount += 1;
-      
-      return acc;
-    }, {} as Record<string, any>);
+    });
 
-    // Convert to final structure with nursing home summaries and resident breakdowns
-    const result = Object.values(groupedByNursingHomeAndMonth).map((nhMonth: any) => ({
+    // Detect missing income types
+    analysisMap.forEach(nhMonthData => {
+      nhMonthData.residents.forEach(residentData => {
+        const actualCategories = residentData.actualTransactions.map(t => t.category.toLowerCase());
+        const expectedTypes = residentData.expectedIncomeTypes.map((type: string) => type.toLowerCase());
+        
+        residentData.missingIncomeTypes = expectedTypes.filter(
+          expectedType => !actualCategories.some(category => 
+            category.includes(expectedType) || expectedType.includes(category)
+          )
+        );
+        
+        residentData.hasIncomeIssues = residentData.missingIncomeTypes.length > 0;
+      });
+    });
+
+    // Convert to final structure
+    const result = Array.from(analysisMap.values()).map(nhMonth => ({
       nursingHomeId: nhMonth.nursingHomeId,
       nursingHomeName: nhMonth.nursingHomeName,
       month: nhMonth.month,
       monthSort: nhMonth.monthSort,
       totalIncome: nhMonth.totalIncome,
       totalTransactions: nhMonth.totalTransactions,
-      residentBreakdown: Object.values(nhMonth.residents)
+      residentDetails: Array.from(nhMonth.residents.values()).map(resident => ({
+        residentId: resident.residentId,
+        residentName: resident.residentName,
+        expectedIncomeTypes: resident.expectedIncomeTypes,
+        totalIncome: resident.totalIncome,
+        transactionCount: resident.transactionCount,
+        hasIncomeIssues: resident.hasIncomeIssues,
+        missingIncomeTypes: resident.missingIncomeTypes,
+        transactions: resident.actualTransactions.sort((a, b) => 
+          new Date(b.date).getTime() - new Date(a.date).getTime()
+        )
+      }))
     }));
 
     // Sort by nursing home name, then by month
-    return result.sort((a: any, b: any) => {
+    return result.sort((a, b) => {
       if (a.nursingHomeName !== b.nursingHomeName) {
         return a.nursingHomeName.localeCompare(b.nursingHomeName);
       }
@@ -399,11 +470,18 @@ export class ReportGenerator {
     const totalIncome = data.reduce((sum, d) => sum + d.totalIncome, 0);
     const totalTransactions = data.reduce((sum, d) => sum + d.totalTransactions, 0);
     
-    // Calculate total unique residents across all records
+    // Calculate total unique residents and residents with issues
     const allResidents = new Set();
+    let residentsWithIssues = 0;
+    let totalMissingIncomeInstances = 0;
+
     data.forEach(d => {
-      d.residentBreakdown.forEach((resident: any) => {
+      d.residentDetails.forEach((resident: any) => {
         allResidents.add(resident.residentId);
+        if (resident.hasIncomeIssues) {
+          residentsWithIssues++;
+          totalMissingIncomeInstances += resident.missingIncomeTypes.length;
+        }
       });
     });
 
@@ -413,6 +491,8 @@ export class ReportGenerator {
       totalRecords,
       totalIncome,
       totalTransactions,
+      residentsWithIssues,
+      totalMissingIncomeInstances,
       averageIncomePerRecord: totalRecords > 0 ? totalIncome / totalRecords : 0,
       generatedAt: new Date().toISOString()
     };
@@ -516,7 +596,7 @@ export class ReportGenerator {
       case 'nursing_home_annual_financial_summary':
         return ['Nursing Home', 'Transactions', 'Total Income', 'Total Expenses', 'Net Amount'];
       case 'residents_income_per_nursing_home_monthly':
-        return ['Nursing Home', 'Month', 'Resident Name', 'Total Income', 'Transaction Count'];
+        return ['Nursing Home', 'Month', 'Resident', 'Transaction Date', 'Amount', 'Category', 'Issues'];
       default:
         return [];
     }
@@ -572,35 +652,34 @@ export class ReportGenerator {
       case 'residents_income_per_nursing_home_monthly':
         const rows: any[][] = [];
         data.forEach(item => {
-          // Add nursing home summary row
-          rows.push([
-            item.nursingHomeName,
-            item.month,
-            'TOTAL',
-            `$${item.totalIncome.toLocaleString()}`,
-            item.totalTransactions.toString()
-          ]);
-          
-          // Add resident breakdown rows
-          item.residentBreakdown.forEach((resident: any) => {
-            rows.push([
-              '', // Empty nursing home name for breakdown rows
-              '',  // Empty month for breakdown rows
-              resident.residentName,
-              `$${resident.totalIncome.toLocaleString()}`,
-              resident.transactionCount.toString()
-            ]);
+          item.residentDetails.forEach((resident: any) => {
+            if (resident.transactions.length > 0) {
+              // Add individual transaction rows
+              resident.transactions.forEach((transaction: any) => {
+                rows.push([
+                  item.nursingHomeName,
+                  item.month,
+                  resident.residentName,
+                  format(new Date(transaction.date), 'MMM dd, yyyy'),
+                  `$${transaction.amount.toLocaleString()}`,
+                  transaction.category,
+                  resident.hasIncomeIssues ? `Missing: ${resident.missingIncomeTypes.join(', ')}` : 'OK'
+                ]);
+              });
+            } else {
+              // Add row for residents with no transactions
+              rows.push([
+                item.nursingHomeName,
+                item.month,
+                resident.residentName,
+                'NO TRANSACTIONS',
+                '$0',
+                '-',
+                resident.hasIncomeIssues ? `Missing: ${resident.missingIncomeTypes.join(', ')}` : 'No Expected Income'
+              ]);
+            }
           });
-          
-          // Add separator row
-          rows.push(['', '', '', '', '']);
         });
-        
-        // Remove last empty separator row
-        if (rows.length > 0 && rows[rows.length - 1].every(cell => cell === '')) {
-          rows.pop();
-        }
-        
         return rows;
       default:
         return [];
@@ -636,8 +715,7 @@ export class ReportGenerator {
         };
       case 'residents_income_per_nursing_home_monthly':
         return {
-          3: { halign: 'right' }, // Total Income
-          4: { halign: 'right' }, // Transaction Count
+          4: { halign: 'right' }, // Amount
         };
       default:
         return {};
@@ -710,26 +788,40 @@ export class ReportGenerator {
       case 'residents_income_per_nursing_home_monthly':
         const excelData: any[] = [];
         data.forEach(item => {
-          // Add nursing home summary
-          excelData.push({
-            'Nursing Home': item.nursingHomeName,
-            'Month': item.month,
-            'Type': 'NURSING HOME TOTAL',
-            'Name': 'TOTAL',
-            'Total Income': item.totalIncome,
-            'Transaction Count': item.totalTransactions,
-          });
-          
-          // Add resident breakdown
-          item.residentBreakdown.forEach((resident: any) => {
-            excelData.push({
-              'Nursing Home': item.nursingHomeName,
-              'Month': item.month,
-              'Type': 'RESIDENT',
-              'Name': resident.residentName,
-              'Total Income': resident.totalIncome,
-              'Transaction Count': resident.transactionCount,
-            });
+          item.residentDetails.forEach((resident: any) => {
+            if (resident.transactions.length > 0) {
+              resident.transactions.forEach((transaction: any) => {
+                excelData.push({
+                  'Nursing Home': item.nursingHomeName,
+                  'Month': item.month,
+                  'Resident Name': resident.residentName,
+                  'Transaction Date': format(new Date(transaction.date), 'MMM dd, yyyy'),
+                  'Amount': transaction.amount,
+                  'Category': transaction.category,
+                  'Description': transaction.description || '',
+                  'Payment Method': transaction.paymentMethod || '',
+                  'Reference Number': transaction.referenceNumber || '',
+                  'Expected Income Types': resident.expectedIncomeTypes.join(', '),
+                  'Missing Income Types': resident.missingIncomeTypes.join(', '),
+                  'Has Issues': resident.hasIncomeIssues ? 'YES' : 'NO'
+                });
+              });
+            } else {
+              excelData.push({
+                'Nursing Home': item.nursingHomeName,
+                'Month': item.month,
+                'Resident Name': resident.residentName,
+                'Transaction Date': 'NO TRANSACTIONS',
+                'Amount': 0,
+                'Category': '',
+                'Description': '',
+                'Payment Method': '',
+                'Reference Number': '',
+                'Expected Income Types': resident.expectedIncomeTypes.join(', '),
+                'Missing Income Types': resident.missingIncomeTypes.join(', '),
+                'Has Issues': resident.hasIncomeIssues ? 'YES' : 'NO'
+              });
+            }
           });
         });
         return excelData;

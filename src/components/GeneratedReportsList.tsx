@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import {
@@ -11,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { DownloadIcon, FileTextIcon, Trash2Icon } from 'lucide-react';
+import { DownloadIcon, FileTextIcon, Trash2Icon, AlertTriangleIcon, ChevronDownIcon, ChevronRightIcon } from 'lucide-react';
 import {
   Pagination,
   PaginationContent,
@@ -38,6 +39,7 @@ import { useDeleteGeneratedReport } from '@/hooks/useDeleteGeneratedReport';
 export function GeneratedReportsList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedReports, setExpandedReports] = useState<Set<string>>(new Set());
+  const [expandedResidents, setExpandedResidents] = useState<Set<string>>(new Set());
   const limit = 10;
   
   const { data: generatedReportsData, isLoading } = useGeneratedReports(undefined, { page: currentPage, limit });
@@ -70,6 +72,16 @@ export function GeneratedReportsList() {
     setExpandedReports(newExpanded);
   };
 
+  const toggleResidentExpansion = (residentKey: string) => {
+    const newExpanded = new Set(expandedResidents);
+    if (newExpanded.has(residentKey)) {
+      newExpanded.delete(residentKey);
+    } else {
+      newExpanded.add(residentKey);
+    }
+    setExpandedResidents(newExpanded);
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed': return 'default';
@@ -90,7 +102,7 @@ export function GeneratedReportsList() {
     if (reportType === 'residents_income_per_nursing_home_monthly') {
       return (
         <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-          <h4 className="font-semibold mb-3">Report Preview</h4>
+          <h4 className="font-semibold mb-3">Detailed Report Preview</h4>
           <div className="space-y-4 max-h-96 overflow-y-auto">
             {reportData.data?.map((item: any, index: number) => (
               <div key={`${item.nursingHomeId}-${item.monthSort}`} className="border rounded-lg p-3 bg-white">
@@ -110,17 +122,83 @@ export function GeneratedReportsList() {
                   </div>
                 </div>
 
-                <div className="space-y-1">
-                  <h6 className="font-medium text-sm text-gray-700 mb-2">Resident Breakdown:</h6>
-                  {item.residentBreakdown?.map((resident: any) => (
-                    <div key={resident.residentId} className="flex justify-between text-sm py-1 px-2 bg-gray-50 rounded">
-                      <span>{resident.residentName}</span>
-                      <div className="flex gap-4">
-                        <span>${resident.totalIncome.toLocaleString()}</span>
-                        <span className="text-gray-500">({resident.transactionCount} transactions)</span>
+                <div className="space-y-2">
+                  <h6 className="font-medium text-sm text-gray-700 mb-2">Resident Details:</h6>
+                  {item.residentDetails?.map((resident: any) => {
+                    const residentKey = `${resident.residentId}-${item.monthSort}`;
+                    const isResidentExpanded = expandedResidents.has(residentKey);
+                    
+                    return (
+                      <div key={resident.residentId} className="border rounded p-2">
+                        <div 
+                          className="flex justify-between items-center cursor-pointer"
+                          onClick={() => toggleResidentExpansion(residentKey)}
+                        >
+                          <div className="flex items-center gap-2">
+                            {isResidentExpanded ? 
+                              <ChevronDownIcon className="h-4 w-4" /> : 
+                              <ChevronRightIcon className="h-4 w-4" />
+                            }
+                            <span className="font-medium">{resident.residentName}</span>
+                            {resident.hasIncomeIssues && (
+                              <AlertTriangleIcon className="h-4 w-4 text-orange-500" />
+                            )}
+                          </div>
+                          <div className="flex gap-4 text-sm">
+                            <span>${resident.totalIncome.toLocaleString()}</span>
+                            <span className="text-gray-500">({resident.transactionCount} transactions)</span>
+                          </div>
+                        </div>
+
+                        {resident.hasIncomeIssues && (
+                          <div className="mt-2 p-2 bg-orange-50 rounded text-sm">
+                            <span className="font-medium text-orange-700">Missing Income Types: </span>
+                            <span className="text-orange-600">{resident.missingIncomeTypes.join(', ')}</span>
+                          </div>
+                        )}
+
+                        {isResidentExpanded && (
+                          <div className="mt-3 space-y-2">
+                            <div className="text-xs text-gray-600 mb-2">
+                              <strong>Expected Income Types:</strong> {resident.expectedIncomeTypes.join(', ') || 'None specified'}
+                            </div>
+                            
+                            {resident.transactions && resident.transactions.length > 0 ? (
+                              <div className="space-y-1">
+                                <div className="text-xs font-medium text-gray-700">Individual Transactions:</div>
+                                {resident.transactions.map((transaction: any) => (
+                                  <div key={transaction.id} className="bg-gray-50 p-2 rounded text-xs">
+                                    <div className="flex justify-between items-start">
+                                      <div>
+                                        <div className="font-medium">{format(new Date(transaction.date), 'MMM dd, yyyy')}</div>
+                                        <div className="text-gray-600">{transaction.category}</div>
+                                        {transaction.description && (
+                                          <div className="text-gray-500 text-xs">{transaction.description}</div>
+                                        )}
+                                      </div>
+                                      <div className="text-right">
+                                        <div className="font-semibold">${transaction.amount.toLocaleString()}</div>
+                                        {transaction.paymentMethod && (
+                                          <div className="text-gray-500 text-xs">{transaction.paymentMethod}</div>
+                                        )}
+                                      </div>
+                                    </div>
+                                    {transaction.referenceNumber && (
+                                      <div className="text-gray-400 text-xs mt-1">Ref: {transaction.referenceNumber}</div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="bg-red-50 p-2 rounded text-xs text-red-700">
+                                <strong>No transactions found</strong> - Expected income types may be missing
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))}
