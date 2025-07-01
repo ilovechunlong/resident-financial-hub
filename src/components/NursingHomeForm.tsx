@@ -20,7 +20,6 @@ const nursingHomeSchema = z.object({
   phone_number: z.string().min(10, 'Valid phone number is required'),
   email: z.string().email('Valid email is required'),
   capacity: z.number().min(1, 'Capacity must be at least 1'),
-  current_residents: z.number().min(0, 'Current residents cannot be negative'),
   status: z.enum(['active', 'inactive', 'maintenance']),
   administrator: z.string().min(1, 'Administrator is required'),
   license_number: z.string().min(1, 'License number is required'),
@@ -49,7 +48,6 @@ export function NursingHomeForm({ initialData, onSubmit, onCancel }: NursingHome
       phone_number: initialData.phone_number,
       email: initialData.email,
       capacity: initialData.capacity,
-      current_residents: initialData.current_residents,
       status: initialData.status,
       administrator: initialData.administrator,
       license_number: initialData.license_number,
@@ -67,7 +65,6 @@ export function NursingHomeForm({ initialData, onSubmit, onCancel }: NursingHome
       phone_number: '',
       email: '',
       capacity: 0,
-      current_residents: 0,
       status: 'active',
       administrator: '',
       license_number: '',
@@ -80,14 +77,6 @@ export function NursingHomeForm({ initialData, onSubmit, onCancel }: NursingHome
   });
 
   const handleSubmit = (data: NursingHomeFormData) => {
-    // Validate that current residents doesn't exceed capacity
-    if (data.current_residents > data.capacity) {
-      form.setError('current_residents', {
-        type: 'manual',
-        message: 'Current residents cannot exceed capacity'
-      });
-      return;
-    }
     onSubmit(data);
   };
 
@@ -236,31 +225,13 @@ export function NursingHomeForm({ initialData, onSubmit, onCancel }: NursingHome
               {/* Capacity and Status */}
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">Facility Details</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <FormField
                     control={form.control}
                     name="capacity"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Capacity</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            placeholder="0"
-                            {...field}
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="current_residents"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Current Residents</FormLabel>
                         <FormControl>
                           <Input 
                             type="number" 

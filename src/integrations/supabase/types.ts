@@ -149,7 +149,6 @@ export type Database = {
           capacity: number
           city: string
           created_at: string
-          current_residents: number
           description: string | null
           email: string
           id: string
@@ -171,7 +170,6 @@ export type Database = {
           capacity: number
           city: string
           created_at?: string
-          current_residents?: number
           description?: string | null
           email: string
           id?: string
@@ -193,7 +191,6 @@ export type Database = {
           capacity?: number
           city?: string
           created_at?: string
-          current_residents?: number
           description?: string | null
           email?: string
           id?: string
