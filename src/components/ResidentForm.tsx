@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -69,15 +68,8 @@ export function ResidentForm({ resident, onSubmit, onCancel }: ResidentFormProps
       return;
     }
     
-    const processedIncomeTypes = (formData.income_types || []).map(type => {
-      if (type.startsWith('custom_')) {
-        return type.replace('custom_', '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-      }
-      return type;
-    });
-
-    const finalFormData = { ...formData, income_types: processedIncomeTypes };
-    onSubmit(finalFormData);
+    // Directly submit formData, do not map income_types to display names
+    onSubmit(formData);
   };
 
   // Don't allow form submission if no nursing homes are available or none is selected
