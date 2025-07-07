@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import {
@@ -35,7 +34,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useGeneratedReports } from '@/hooks/useGeneratedReports';
 import { useDeleteGeneratedReport } from '@/hooks/useDeleteGeneratedReport';
-import { ResidentDetail, MonthlyIncomeReportItem } from '@/types/reportTypes';
+import { ResidentDetail, MonthlyIncomeReportItem, IncomeExpenseSummaryReportItem, ResidentIncomeExpenseSummary } from '@/types/reportTypes';
 
 export function GeneratedReportsList() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -99,6 +98,115 @@ export function GeneratedReportsList() {
 
     const reportData = report.report_data;
     const reportType = reportData.report_type;
+
+    if (reportType === 'resident_income_expense_summary') {
+      return (
+        <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+          <h4 className="font-semibold mb-3">Income Expense Summary Report Preview</h4>
+          <div className="space-y-4 max-h-96 overflow-y-auto">
+            {reportData.data?.map((item: IncomeExpenseSummaryReportItem, index: number) => (
+              <div key={`${item.nursingHomeId}-${item.monthSort}`} className="border rounded-lg p-3 bg-white">
+                <div className="flex justify-between items-center mb-2">
+                  <h5 className="font-semibold text-lg">{item.nursingHomeName}</h5>
+                  <Badge variant="outline">{item.month}</Badge>
+                </div>
+                
+                <div className="mb-3 p-2 bg-blue-50 rounded grid grid-cols-3 gap-4">
+                  <div className="text-sm">
+                    <span className="font-medium">Total Income:</span>
+                    <div className="font-semibold text-green-600">${item.totalIncome.toLocaleString()}</div>
+                  </div>
+                  <div className="text-sm">
+                    <span className="font-medium">Total Expenses:</span>
+                    <div className="font-semibold text-red-600">${item.totalExpenses.toLocaleString()}</div>
+                  </div>
+                  <div className="text-sm">
+                    <span className="font-medium">Net Amount:</span>
+                    <div className={`font-semibold ${item.netAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      ${item.netAmount.toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <h6 className="font-medium text-sm text-gray-700 mb-2">Resident Summaries:</h6>
+                  {item.residentSummaries?.map((resident: ResidentIncomeExpenseSummary) => {
+                    const residentKey = `${resident.residentId}-${item.monthSort}`;
+                    const isResidentExpanded = expandedResidents.has(residentKey);
+                    
+                    return (
+                      <div key={resident.residentId} className="border rounded p-2">
+                        <div 
+                          className="flex justify-between items-center cursor-pointer"
+                          onClick={() => toggleResidentExpansion(residentKey)}
+                        >
+                          <div className="flex items-center gap-2">
+                            {isResidentExpanded ? 
+                              <ChevronDownIcon className="h-4 w-4" /> : 
+                              <ChevronRightIcon className="h-4 w-4" />
+                            }
+                            <span className="font-medium">{resident.residentName}</span>
+                          </div>
+                          <div className="flex gap-4 text-sm">
+                            <span className="text-green-600">+${resident.monthlyIncome.toLocaleString()}</span>
+                            <span className="text-red-600">-${resident.totalExpenses.toLocaleString()}</span>
+                            <span className={`font-semibold ${resident.netAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              ${resident.netAmount.toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+
+                        {isResidentExpanded && (
+                          <div className="mt-3 space-y-2">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="bg-green-50 p-2 rounded">
+                                <div className="text-xs font-medium text-green-700 mb-1">Monthly Income</div>
+                                <div className="text-sm font-semibold text-green-600">
+                                  ${resident.monthlyIncome.toLocaleString()}
+                                </div>
+                              </div>
+                              <div className="bg-red-50 p-2 rounded">
+                                <div className="text-xs font-medium text-red-700 mb-1">Total Expenses</div>
+                                <div className="text-sm font-semibold text-red-600">
+                                  ${resident.totalExpenses.toLocaleString()}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {resident.monthlyExpenses && resident.monthlyExpenses.length > 0 ? (
+                              <div className="space-y-1">
+                                <div className="text-xs font-medium text-gray-700">Expense Categories:</div>
+                                {resident.monthlyExpenses.map((category, catIndex) => (
+                                  <div key={catIndex} className="bg-gray-50 p-2 rounded text-xs">
+                                    <div className="flex justify-between items-center">
+                                      <div>
+                                        <div className="font-medium">{category.category}</div>
+                                        <div className="text-gray-600">{category.transactionCount} transactions</div>
+                                      </div>
+                                      <div className="text-right">
+                                        <div className="font-semibold text-red-600">${category.totalAmount.toLocaleString()}</div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="bg-gray-50 p-2 rounded text-xs text-gray-600">
+                                No expenses for this month
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
 
     if (reportType === 'residents_income_per_nursing_home_monthly') {
       return (
