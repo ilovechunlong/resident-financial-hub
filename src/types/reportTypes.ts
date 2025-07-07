@@ -7,6 +7,7 @@ export interface ResidentTransaction {
   description?: string;
   paymentMethod?: string;
   referenceNumber?: string;
+  status?: string;
 }
 
 export interface ResidentDetail {

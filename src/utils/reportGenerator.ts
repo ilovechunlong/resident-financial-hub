@@ -51,7 +51,7 @@ export class ReportGenerator {
           summary = this.calculateNursingHomeAnnualFinancialSummary(data);
           break;
         case 'residents_income_per_nursing_home_monthly':
-          data = await this.getResidentsIncomePerNursingHomeMonthlyData(dateRange);
+          data = await this.getResidentsIncomePerNursingHomeMonthlyData(dateRange, configId);
           summary = this.calculateResidentsIncomePerNursingHomeMonthly(data);
           break;
         default:
@@ -229,9 +229,26 @@ export class ReportGenerator {
     });
   }
 
-  private static async getResidentsIncomePerNursingHomeMonthlyData(dateRange?: { start?: string; end?: string }) {
-    // First, get all residents with their income types and nursing home info
-    const { data: residents, error: residentsError } = await supabase
+  private static async getResidentsIncomePerNursingHomeMonthlyData(dateRange?: { start?: string; end?: string }, configId?: string) {
+    // First, get the nursing home ID from the report configuration
+    let nursingHomeId: string | null = null;
+    if (configId) {
+      const { data: config, error: configError } = await supabase
+        .from('report_configurations')
+        .select('nursing_home_id')
+        .eq('id', configId)
+        .single();
+      
+      if (configError) {
+        console.error('Error fetching report configuration:', configError);
+        throw configError;
+      }
+      
+      nursingHomeId = config.nursing_home_id;
+    }
+
+    // Get residents filtered by nursing home if specified
+    let residentsQuery = supabase
       .from('residents')
       .select(`
         id,
@@ -246,6 +263,12 @@ export class ReportGenerator {
       `)
       .not('nursing_home_id', 'is', null);
 
+    // Filter by specific nursing home if provided
+    if (nursingHomeId) {
+      residentsQuery = residentsQuery.eq('nursing_home_id', nursingHomeId);
+    }
+
+    const { data: residents, error: residentsError } = await residentsQuery;
     if (residentsError) throw residentsError;
     if (!residents || residents.length === 0) return [];
 
@@ -286,17 +309,17 @@ export class ReportGenerator {
 
     // Process each nursing home and month combination
     residents.forEach(resident => {
-      const nursingHomeId = resident.nursing_home_id;
+      const residentNursingHomeId = resident.nursing_home_id;
       const nursingHomeName = resident.nursing_homes?.name || 'Unknown';
       const residentName = `${resident.first_name} ${resident.last_name}`;
       const expectedIncomeTypes = resident.income_types || [];
 
       months.forEach(({ monthKey, monthDisplay }) => {
-        const nhMonthKey = `${nursingHomeId}-${monthKey}`;
+        const nhMonthKey = `${residentNursingHomeId}-${monthKey}`;
         
         if (!analysisMap.has(nhMonthKey)) {
           analysisMap.set(nhMonthKey, {
-            nursingHomeId,
+            nursingHomeId: residentNursingHomeId,
             nursingHomeName,
             month: monthDisplay,
             monthSort: monthKey,
@@ -344,14 +367,19 @@ export class ReportGenerator {
               category: transaction.category,
               description: transaction.description,
               paymentMethod: transaction.payment_method,
-              referenceNumber: transaction.reference_number
+              referenceNumber: transaction.reference_number,
+              status: transaction.status // Include the transaction status
             };
             
             residentData.actualTransactions.push(transactionData);
-            residentData.totalIncome += Number(transaction.amount);
-            residentData.transactionCount += 1;
             
-            nhMonthData.totalIncome += Number(transaction.amount);
+            // Only count completed transactions in totals, but still include pending ones in the list
+            if (transaction.status === 'completed') {
+              residentData.totalIncome += Number(transaction.amount);
+              nhMonthData.totalIncome += Number(transaction.amount);
+            }
+            
+            residentData.transactionCount += 1;
             nhMonthData.totalTransactions += 1;
           }
         }
@@ -600,7 +628,7 @@ export class ReportGenerator {
       case 'nursing_home_annual_financial_summary':
         return ['Nursing Home', 'Transactions', 'Total Income', 'Total Expenses', 'Net Amount'];
       case 'residents_income_per_nursing_home_monthly':
-        return ['Nursing Home', 'Month', 'Resident', 'Transaction Date', 'Amount', 'Category', 'Issues'];
+        return ['Nursing Home', 'Month', 'Resident', 'Transaction Date', 'Amount', 'Category', 'Status', 'Issues'];
       default:
         return [];
     }
@@ -667,6 +695,7 @@ export class ReportGenerator {
                   format(new Date(transaction.date), 'MMM dd, yyyy'),
                   `$${transaction.amount.toLocaleString()}`,
                   transaction.category,
+                  transaction.status || 'completed',
                   resident.hasIncomeIssues ? `Missing: ${resident.missingIncomeTypes.join(', ')}` : 'OK'
                 ]);
               });
@@ -678,6 +707,7 @@ export class ReportGenerator {
                 resident.residentName,
                 'NO TRANSACTIONS',
                 '$0',
+                '-',
                 '-',
                 resident.hasIncomeIssues ? `Missing: ${resident.missingIncomeTypes.join(', ')}` : 'No Expected Income'
               ]);
@@ -806,6 +836,7 @@ export class ReportGenerator {
                   'Description': transaction.description || '',
                   'Payment Method': transaction.paymentMethod || '',
                   'Reference Number': transaction.referenceNumber || '',
+                  'Status': transaction.status || 'completed',
                   'Expected Income Types': resident.expectedIncomeTypes.join(', '),
                   'Missing Income Types': resident.missingIncomeTypes.join(', '),
                   'Has Issues': resident.hasIncomeIssues ? 'YES' : 'NO'
@@ -823,6 +854,7 @@ export class ReportGenerator {
                 'Description': '',
                 'Payment Method': '',
                 'Reference Number': '',
+                'Status': '',
                 'Expected Income Types': resident.expectedIncomeTypes.join(', '),
                 'Missing Income Types': resident.missingIncomeTypes.join(', '),
                 'Has Issues': resident.hasIncomeIssues ? 'YES' : 'NO'

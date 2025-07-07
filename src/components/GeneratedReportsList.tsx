@@ -182,6 +182,11 @@ export function GeneratedReportsList() {
                                         {transaction.paymentMethod && (
                                           <div className="text-gray-500 text-xs">{transaction.paymentMethod}</div>
                                         )}
+                                        {transaction.status && (
+                                          <div className={`text-xs ${transaction.status === 'pending' ? 'text-orange-600' : 'text-green-600'}`}>
+                                            {transaction.status === 'pending' ? 'PENDING' : 'COMPLETED'}
+                                          </div>
+                                        )}
                                       </div>
                                     </div>
                                     {transaction.referenceNumber && (
