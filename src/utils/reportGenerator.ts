@@ -3,7 +3,7 @@ import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
-import { ResidentDetail, ResidentTransaction, MonthlyIncomeReportItem, CategorySummary, MonthlyFinancialData, ResidentFinancialByMonth, NursingHomeFinancialByMonth } from '@/types/reportTypes';
+import { ResidentDetail, ResidentTransaction, MonthlyIncomeReportItem } from '@/types/reportTypes';
 
 export interface ReportData {
   id: string;
@@ -53,10 +53,6 @@ export class ReportGenerator {
         case 'residents_income_per_nursing_home_monthly':
           data = await this.getResidentsIncomePerNursingHomeMonthlyData(dateRange, configId);
           summary = this.calculateResidentsIncomePerNursingHomeMonthly(data);
-          break;
-        case 'resident_income_expense_by_month_category':
-          data = await this.getResidentIncomeExpenseByMonthCategoryData(dateRange, configId);
-          summary = this.calculateResidentIncomeExpenseByMonthCategory(data);
           break;
         default:
           throw new Error(`Unknown report type: ${reportType}`);
@@ -437,180 +433,6 @@ export class ReportGenerator {
     });
   }
 
-  private static async getResidentIncomeExpenseByMonthCategoryData(dateRange?: { start?: string; end?: string }, configId?: string): Promise<NursingHomeFinancialByMonth[]> {
-    // Get the nursing home ID from the report configuration
-    let nursingHomeId: string | null = null;
-    if (configId) {
-      const { data: config, error: configError } = await supabase
-        .from('report_configurations')
-        .select('nursing_home_id')
-        .eq('id', configId)
-        .single();
-      
-      if (configError) {
-        console.error('Error fetching report configuration:', configError);
-        throw configError;
-      }
-      
-      nursingHomeId = config.nursing_home_id;
-    }
-
-    if (!nursingHomeId) {
-      throw new Error('Nursing home ID is required for this report type');
-    }
-
-    // Get nursing home details
-    const { data: nursingHome, error: nursingHomeError } = await supabase
-      .from('nursing_homes')
-      .select('id, name')
-      .eq('id', nursingHomeId)
-      .single();
-
-    if (nursingHomeError) throw nursingHomeError;
-    if (!nursingHome) throw new Error('Nursing home not found');
-
-    // Get residents for the specified nursing home
-    const { data: residents, error: residentsError } = await supabase
-      .from('residents')
-      .select('id, first_name, last_name')
-      .eq('nursing_home_id', nursingHomeId);
-
-    if (residentsError) throw residentsError;
-    if (!residents || residents.length === 0) {
-      return [{
-        nursingHomeId,
-        nursingHomeName: nursingHome.name,
-        dateRange: {
-          start: dateRange?.start || '',
-          end: dateRange?.end || ''
-        },
-        residents: [],
-        totalIncome: 0,
-        totalExpenses: 0,
-        netAmount: 0
-      }];
-    }
-
-    // Get all transactions for these residents within the date range
-    let transactionQuery = supabase
-      .from('financial_transactions')
-      .select('*')
-      .in('resident_id', residents.map(r => r.id))
-      .in('transaction_type', ['income', 'expense']);
-
-    if (dateRange?.start) {
-      transactionQuery = transactionQuery.gte('transaction_date', dateRange.start);
-    }
-    if (dateRange?.end) {
-      transactionQuery = transactionQuery.lte('transaction_date', dateRange.end);
-    }
-
-    const { data: transactions, error: transactionsError } = await transactionQuery;
-    if (transactionsError) throw transactionsError;
-
-    // Generate months in the date range
-    const startDate = dateRange?.start ? new Date(dateRange.start) : new Date(new Date().getFullYear(), 0, 1);
-    const endDate = dateRange?.end ? new Date(dateRange.end) : new Date();
-    
-    const months = [];
-    const current = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
-    while (current <= endDate) {
-      months.push({
-        monthKey: format(current, 'yyyy-MM'),
-        monthDisplay: format(current, 'MMM yyyy')
-      });
-      current.setMonth(current.getMonth() + 1);
-    }
-
-    // Process data for each resident
-    const residentsData: ResidentFinancialByMonth[] = residents.map(resident => {
-      const residentTransactions = (transactions || []).filter(t => t.resident_id === resident.id);
-      
-      // Group transactions by month and category
-      const monthlyData: MonthlyFinancialData[] = months.map(({ monthKey, monthDisplay }) => {
-        const monthTransactions = residentTransactions.filter(t => {
-          const transactionMonth = format(new Date(t.transaction_date), 'yyyy-MM');
-          return transactionMonth === monthKey;
-        });
-
-        // Group by transaction type and category
-        const incomeByCategory = new Map<string, CategorySummary>();
-        const expensesByCategory = new Map<string, CategorySummary>();
-
-        monthTransactions.forEach(transaction => {
-          const categoryMap = transaction.transaction_type === 'income' ? incomeByCategory : expensesByCategory;
-          const category = transaction.category;
-
-          if (!categoryMap.has(category)) {
-            categoryMap.set(category, {
-              category,
-              totalAmount: 0,
-              transactionCount: 0,
-              transactions: []
-            });
-          }
-
-          const categorySummary = categoryMap.get(category)!;
-          categorySummary.totalAmount += Number(transaction.amount);
-          categorySummary.transactionCount += 1;
-          categorySummary.transactions.push({
-            id: transaction.id,
-            date: transaction.transaction_date,
-            amount: Number(transaction.amount),
-            category: transaction.category,
-            description: transaction.description,
-            paymentMethod: transaction.payment_method,
-            referenceNumber: transaction.reference_number,
-            status: transaction.status
-          });
-        });
-
-        const income = Array.from(incomeByCategory.values());
-        const expenses = Array.from(expensesByCategory.values());
-        const totalIncome = income.reduce((sum, cat) => sum + cat.totalAmount, 0);
-        const totalExpenses = expenses.reduce((sum, cat) => sum + cat.totalAmount, 0);
-
-        return {
-          month: monthDisplay,
-          monthSort: monthKey,
-          income,
-          expenses,
-          totalIncome,
-          totalExpenses,
-          netAmount: totalIncome - totalExpenses
-        };
-      });
-
-      const totalIncome = monthlyData.reduce((sum, month) => sum + month.totalIncome, 0);
-      const totalExpenses = monthlyData.reduce((sum, month) => sum + month.totalExpenses, 0);
-
-      return {
-        residentId: resident.id,
-        residentName: `${resident.first_name} ${resident.last_name}`,
-        monthlyData,
-        totalIncome,
-        totalExpenses,
-        netAmount: totalIncome - totalExpenses
-      };
-    });
-
-    const totalIncome = residentsData.reduce((sum, resident) => sum + resident.totalIncome, 0);
-    const totalExpenses = residentsData.reduce((sum, resident) => sum + resident.totalExpenses, 0);
-
-    return [{
-      nursingHomeId,
-      nursingHomeName: nursingHome.name,
-      dateRange: {
-        start: dateRange?.start || '',
-        end: dateRange?.end || ''
-      },
-      residents: residentsData,
-      totalIncome,
-      totalExpenses,
-      netAmount: totalIncome - totalExpenses
-    }];
-  }
-
   private static calculateFinancialSummary(data: any[]) {
     const totalIncome = data
       .filter(t => t.transaction_type === 'income')
@@ -704,36 +526,6 @@ export class ReportGenerator {
       residentsWithIssues,
       totalMissingIncomeInstances,
       averageIncomePerRecord: totalRecords > 0 ? totalIncome / totalRecords : 0,
-      generatedAt: new Date().toISOString()
-    };
-  }
-
-  private static calculateResidentIncomeExpenseByMonthCategory(data: NursingHomeFinancialByMonth[]) {
-    const nursingHomeData = data[0];
-    if (!nursingHomeData) {
-      return {
-        totalResidents: 0,
-        totalIncome: 0,
-        totalExpenses: 0,
-        netAmount: 0,
-        monthsCovered: 0,
-        generatedAt: new Date().toISOString()
-      };
-    }
-
-    const totalResidents = nursingHomeData.residents.length;
-    const monthsCovered = nursingHomeData.residents.length > 0 
-      ? nursingHomeData.residents[0].monthlyData.length 
-      : 0;
-
-    return {
-      totalResidents,
-      totalIncome: nursingHomeData.totalIncome,
-      totalExpenses: nursingHomeData.totalExpenses,
-      netAmount: nursingHomeData.netAmount,
-      monthsCovered,
-      averageIncomePerResident: totalResidents > 0 ? nursingHomeData.totalIncome / totalResidents : 0,
-      averageExpensesPerResident: totalResidents > 0 ? nursingHomeData.totalExpenses / totalResidents : 0,
       generatedAt: new Date().toISOString()
     };
   }
@@ -837,8 +629,6 @@ export class ReportGenerator {
         return ['Nursing Home', 'Transactions', 'Total Income', 'Total Expenses', 'Net Amount'];
       case 'residents_income_per_nursing_home_monthly':
         return ['Nursing Home', 'Month', 'Resident', 'Transaction Date', 'Amount', 'Category', 'Status', 'Issues'];
-      case 'resident_income_expense_by_month_category':
-        return ['Resident', 'Month', 'Type', 'Category', 'Amount', 'Transactions', 'Net Amount'];
       default:
         return [];
     }
@@ -925,53 +715,6 @@ export class ReportGenerator {
           });
         });
         return rows;
-      case 'resident_income_expense_by_month_category':
-        const rows2: any[][] = [];
-        data.forEach((nursingHome: NursingHomeFinancialByMonth) => {
-          nursingHome.residents.forEach(resident => {
-            resident.monthlyData.forEach(monthData => {
-              // Add income rows
-              monthData.income.forEach(incomeCategory => {
-                rows2.push([
-                  resident.residentName,
-                  monthData.month,
-                  'Income',
-                  incomeCategory.category,
-                  `$${incomeCategory.totalAmount.toLocaleString()}`,
-                  incomeCategory.transactionCount.toString(),
-                  '-'
-                ]);
-              });
-              
-              // Add expense rows
-              monthData.expenses.forEach(expenseCategory => {
-                rows2.push([
-                  resident.residentName,
-                  monthData.month,
-                  'Expense',
-                  expenseCategory.category,
-                  `$${expenseCategory.totalAmount.toLocaleString()}`,
-                  expenseCategory.transactionCount.toString(),
-                  '-'
-                ]);
-              });
-
-              // Add monthly summary row
-              if (monthData.income.length > 0 || monthData.expenses.length > 0) {
-                rows2.push([
-                  resident.residentName,
-                  monthData.month,
-                  'MONTHLY NET',
-                  '-',
-                  '-',
-                  '-',
-                  `$${monthData.netAmount.toLocaleString()}`
-                ]);
-              }
-            });
-          });
-        });
-        return rows2;
       default:
         return [];
     }
@@ -1007,12 +750,6 @@ export class ReportGenerator {
       case 'residents_income_per_nursing_home_monthly':
         return {
           4: { halign: 'right' }, // Amount
-        };
-      case 'resident_income_expense_by_month_category':
-        return {
-          4: { halign: 'right' }, // Amount
-          5: { halign: 'right' }, // Transactions
-          6: { halign: 'right' }, // Net Amount
         };
       default:
         return {};
@@ -1126,52 +863,6 @@ export class ReportGenerator {
           });
         });
         return excelData;
-      case 'resident_income_expense_by_month_category':
-        const excelData2: any[] = [];
-        data.forEach((nursingHome: NursingHomeFinancialByMonth) => {
-          nursingHome.residents.forEach(resident => {
-            resident.monthlyData.forEach(monthData => {
-              // Add income transactions
-              monthData.income.forEach(incomeCategory => {
-                incomeCategory.transactions.forEach(transaction => {
-                  excelData2.push({
-                    'Nursing Home': nursingHome.nursingHomeName,
-                    'Resident Name': resident.residentName,
-                    'Month': monthData.month,
-                    'Transaction Type': 'Income',
-                    'Category': incomeCategory.category,
-                    'Transaction Date': format(new Date(transaction.date), 'MMM dd, yyyy'),
-                    'Amount': transaction.amount,
-                    'Description': transaction.description || '',
-                    'Payment Method': transaction.paymentMethod || '',
-                    'Reference Number': transaction.referenceNumber || '',
-                    'Status': transaction.status || 'completed'
-                  });
-                });
-              });
-
-              // Add expense transactions
-              monthData.expenses.forEach(expenseCategory => {
-                expenseCategory.transactions.forEach(transaction => {
-                  excelData2.push({
-                    'Nursing Home': nursingHome.nursingHomeName,
-                    'Resident Name': resident.residentName,
-                    'Month': monthData.month,
-                    'Transaction Type': 'Expense',
-                    'Category': expenseCategory.category,
-                    'Transaction Date': format(new Date(transaction.date), 'MMM dd, yyyy'),
-                    'Amount': transaction.amount,
-                    'Description': transaction.description || '',
-                    'Payment Method': transaction.paymentMethod || '',
-                    'Reference Number': transaction.referenceNumber || '',
-                    'Status': transaction.status || 'completed'
-                  });
-                });
-              });
-            });
-          });
-        });
-        return excelData2;
       default:
         return data;
     }
