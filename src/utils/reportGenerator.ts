@@ -3,7 +3,7 @@ import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
-import { ResidentDetail, ResidentTransaction, MonthlyIncomeReportItem } from '@/types/reportTypes';
+import { ResidentDetail, ResidentTransaction, MonthlyIncomeReportItem, IncomeExpenseSummaryReportItem } from '@/types/reportTypes';
 
 export interface ReportData {
   id: string;
@@ -643,7 +643,7 @@ export class ReportGenerator {
                   'Reference Number': transaction.referenceNumber || '',
                   'Status': transaction.status || 'completed',
                   'Expected Income Types': resident.expectedIncomeTypes.join(', '),
-                  'Missing Income Types': resident.missingIncomeTypes.join(', ',
+                  'Missing Income Types': resident.missingIncomeTypes.join(', '),
                   'Has Issues': resident.hasIncomeIssues ? 'YES' : 'NO'
                 });
               });
