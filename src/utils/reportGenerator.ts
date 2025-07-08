@@ -7,7 +7,7 @@ import { IncomeExpenseReportGenerator } from './reports/incomeExpenseReport';
 import { BasicReportGenerators } from './reports/basicReports';
 import { ReportExporter } from './reports/exportUtils';
 
-export { ReportData } from './reports/types';
+export type { ReportData } from './reports/types';
 
 export class ReportGenerator {
   static async generateReportData(configId: string, reportType: string, dateRange?: { start?: string; end?: string }): Promise<ReportData> {
