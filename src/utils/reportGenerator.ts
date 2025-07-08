@@ -76,6 +76,377 @@ export class ReportGenerator {
     }
   }
 
+  // Add all missing methods with basic implementations
+  private static async getFinancialSummaryData(dateRange?: { start?: string; end?: string }) {
+    let query = supabase
+      .from('financial_transactions')
+      .select('*')
+      .eq('status', 'completed');
+
+    if (dateRange?.start) {
+      query = query.gte('transaction_date', dateRange.start);
+    }
+    if (dateRange?.end) {
+      query = query.lte('transaction_date', dateRange.end);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  }
+
+  private static calculateFinancialSummary(data: any[]) {
+    const totalTransactions = data.length;
+    const totalAmount = data.reduce((sum, item) => sum + Number(item.amount), 0);
+    const totalIncome = data.filter(item => item.transaction_type === 'income').reduce((sum, item) => sum + Number(item.amount), 0);
+    const totalExpenses = data.filter(item => item.transaction_type === 'expense').reduce((sum, item) => sum + Number(item.amount), 0);
+
+    return {
+      totalTransactions,
+      totalAmount,
+      totalIncome,
+      totalExpenses,
+      netAmount: totalIncome - totalExpenses,
+      generatedAt: new Date().toISOString()
+    };
+  }
+
+  private static async getTransactionData(dateRange?: { start?: string; end?: string }) {
+    return this.getFinancialSummaryData(dateRange);
+  }
+
+  private static calculateTransactionSummary(data: any[]) {
+    return this.calculateFinancialSummary(data);
+  }
+
+  private static async getNursingHomeData() {
+    const { data, error } = await supabase
+      .from('nursing_homes')
+      .select('*');
+    
+    if (error) throw error;
+    return data || [];
+  }
+
+  private static calculateNursingHomeSummary(data: any[]) {
+    return {
+      totalNursingHomes: data.length,
+      totalCapacity: data.reduce((sum, item) => sum + item.capacity, 0),
+      averageCapacity: data.length > 0 ? data.reduce((sum, item) => sum + item.capacity, 0) / data.length : 0,
+      generatedAt: new Date().toISOString()
+    };
+  }
+
+  private static async getResidentData() {
+    const { data, error } = await supabase
+      .from('residents')
+      .select(`
+        *,
+        nursing_homes (
+          id,
+          name
+        )
+      `);
+    
+    if (error) throw error;
+    return data || [];
+  }
+
+  private static calculateResidentSummary(data: any[]) {
+    return {
+      totalResidents: data.length,
+      activeResidents: data.filter(r => r.status === 'active').length,
+      generatedAt: new Date().toISOString()
+    };
+  }
+
+  private static async getResidentAnnualFinancialSummaryData(dateRange?: { start?: string; end?: string }) {
+    const { data: residents, error: residentsError } = await supabase
+      .from('residents')
+      .select('id, first_name, last_name');
+    
+    if (residentsError) throw residentsError;
+    if (!residents || residents.length === 0) return [];
+
+    let transactionQuery = supabase
+      .from('financial_transactions')
+      .select('*')
+      .not('resident_id', 'is', null)
+      .in('resident_id', residents.map(r => r.id))
+      .eq('status', 'completed');
+
+    if (dateRange?.start) {
+      transactionQuery = transactionQuery.gte('transaction_date', dateRange.start);
+    }
+    if (dateRange?.end) {
+      transactionQuery = transactionQuery.lte('transaction_date', dateRange.end);
+    }
+
+    const { data: transactions, error: transactionsError } = await transactionQuery;
+    if (transactionsError) throw transactionsError;
+
+    return residents.map(resident => {
+      const residentTransactions = (transactions || []).filter(t => t.resident_id === resident.id);
+      const totalIncome = residentTransactions.filter(t => t.transaction_type === 'income').reduce((sum, t) => sum + Number(t.amount), 0);
+      const totalExpenses = residentTransactions.filter(t => t.transaction_type === 'expense').reduce((sum, t) => sum + Number(t.amount), 0);
+
+      return {
+        ...resident,
+        transactionCount: residentTransactions.length,
+        totalIncome,
+        totalExpenses,
+        netAmount: totalIncome - totalExpenses
+      };
+    });
+  }
+
+  private static calculateResidentAnnualFinancialSummary(data: any[]) {
+    const totalIncome = data.reduce((sum, r) => sum + r.totalIncome, 0);
+    const totalExpenses = data.reduce((sum, r) => sum + r.totalExpenses, 0);
+
+    return {
+      totalResidents: data.length,
+      totalIncome,
+      totalExpenses,
+      netAmount: totalIncome - totalExpenses,
+      averageIncomePerResident: data.length > 0 ? totalIncome / data.length : 0,
+      averageExpensePerResident: data.length > 0 ? totalExpenses / data.length : 0,
+      generatedAt: new Date().toISOString()
+    };
+  }
+
+  private static async getNursingHomeAnnualFinancialSummaryData(dateRange?: { start?: string; end?: string }) {
+    const { data: nursingHomes, error: nhError } = await supabase
+      .from('nursing_homes')
+      .select('id, name');
+    
+    if (nhError) throw nhError;
+    if (!nursingHomes || nursingHomes.length === 0) return [];
+
+    let transactionQuery = supabase
+      .from('financial_transactions')
+      .select('*')
+      .not('nursing_home_id', 'is', null)
+      .in('nursing_home_id', nursingHomes.map(nh => nh.id))
+      .eq('status', 'completed');
+
+    if (dateRange?.start) {
+      transactionQuery = transactionQuery.gte('transaction_date', dateRange.start);
+    }
+    if (dateRange?.end) {
+      transactionQuery = transactionQuery.lte('transaction_date', dateRange.end);
+    }
+
+    const { data: transactions, error: transactionsError } = await transactionQuery;
+    if (transactionsError) throw transactionsError;
+
+    return nursingHomes.map(nh => {
+      const nhTransactions = (transactions || []).filter(t => t.nursing_home_id === nh.id);
+      const totalIncome = nhTransactions.filter(t => t.transaction_type === 'income').reduce((sum, t) => sum + Number(t.amount), 0);
+      const totalExpenses = nhTransactions.filter(t => t.transaction_type === 'expense').reduce((sum, t) => sum + Number(t.amount), 0);
+
+      return {
+        ...nh,
+        transactionCount: nhTransactions.length,
+        totalIncome,
+        totalExpenses,
+        netAmount: totalIncome - totalExpenses
+      };
+    });
+  }
+
+  private static calculateNursingHomeAnnualFinancialSummary(data: any[]) {
+    const totalIncome = data.reduce((sum, nh) => sum + nh.totalIncome, 0);
+    const totalExpenses = data.reduce((sum, nh) => sum + nh.totalExpenses, 0);
+
+    return {
+      totalNursingHomes: data.length,
+      totalIncome,
+      totalExpenses,
+      netAmount: totalIncome - totalExpenses,
+      averageIncomePerNursingHome: data.length > 0 ? totalIncome / data.length : 0,
+      averageExpensePerNursingHome: data.length > 0 ? totalExpenses / data.length : 0,
+      generatedAt: new Date().toISOString()
+    };
+  }
+
+  private static async getResidentsIncomePerNursingHomeMonthlyData(dateRange?: { start?: string; end?: string }, configId?: string) {
+    // Get the nursing home ID from the report configuration
+    let nursingHomeId: string | null = null;
+    if (configId) {
+      const { data: config, error: configError } = await supabase
+        .from('report_configurations')
+        .select('nursing_home_id')
+        .eq('id', configId)
+        .single();
+      
+      if (configError) {
+        console.error('Error fetching report configuration:', configError);
+        throw configError;
+      }
+      
+      nursingHomeId = config.nursing_home_id;
+    }
+
+    // Get residents filtered by nursing home if specified
+    let residentsQuery = supabase
+      .from('residents')
+      .select(`
+        id,
+        first_name,
+        last_name,
+        nursing_home_id,
+        income_types,
+        nursing_homes (
+          id,
+          name
+        )
+      `)
+      .not('nursing_home_id', 'is', null);
+
+    if (nursingHomeId) {
+      residentsQuery = residentsQuery.eq('nursing_home_id', nursingHomeId);
+    }
+
+    const { data: residents, error: residentsError } = await residentsQuery;
+    if (residentsError) throw residentsError;
+    if (!residents || residents.length === 0) return [];
+
+    // Get income transactions for these residents
+    let transactionQuery = supabase
+      .from('financial_transactions')
+      .select('*')
+      .eq('transaction_type', 'income')
+      .not('resident_id', 'is', null)
+      .in('resident_id', residents.map(r => r.id))
+      .eq('status', 'completed');
+
+    if (dateRange?.start) {
+      transactionQuery = transactionQuery.gte('transaction_date', dateRange.start);
+    }
+    if (dateRange?.end) {
+      transactionQuery = transactionQuery.lte('transaction_date', dateRange.end);
+    }
+
+    const { data: transactions, error: transactionsError } = await transactionQuery;
+    if (transactionsError) throw transactionsError;
+
+    // Process data by nursing home and month
+    const result: MonthlyIncomeReportItem[] = [];
+    const nursingHomeMap = new Map<string, any>();
+
+    // Group residents by nursing home
+    residents.forEach(resident => {
+      const nhId = resident.nursing_home_id;
+      if (!nursingHomeMap.has(nhId)) {
+        nursingHomeMap.set(nhId, {
+          nursingHomeId: nhId,
+          nursingHomeName: resident.nursing_homes?.name || 'Unknown',
+          residents: []
+        });
+      }
+      nursingHomeMap.get(nhId).residents.push(resident);
+    });
+
+    // Generate monthly reports
+    const startDate = dateRange?.start ? new Date(dateRange.start) : new Date(new Date().getFullYear(), 0, 1);
+    const endDate = dateRange?.end ? new Date(dateRange.end) : new Date();
+    
+    const months = [];
+    const current = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+    while (current <= endDate) {
+      months.push({
+        monthKey: format(current, 'yyyy-MM'),
+        monthDisplay: format(current, 'MMM yyyy')
+      });
+      current.setMonth(current.getMonth() + 1);
+    }
+
+    nursingHomeMap.forEach((nhData) => {
+      months.forEach(({ monthKey, monthDisplay }) => {
+        const monthTransactions = (transactions || []).filter(t => {
+          const tDate = new Date(t.transaction_date);
+          return format(tDate, 'yyyy-MM') === monthKey;
+        });
+
+        const residentDetails: ResidentDetail[] = nhData.residents.map((resident: any) => {
+          const residentTransactions = monthTransactions.filter(t => t.resident_id === resident.id);
+          const expectedIncomeTypes = resident.income_types || [];
+          const actualIncomeTypes = [...new Set(residentTransactions.map(t => t.category))];
+          const missingIncomeTypes = expectedIncomeTypes.filter(type => !actualIncomeTypes.includes(type));
+
+          return {
+            residentId: resident.id,
+            residentName: `${resident.first_name} ${resident.last_name}`,
+            expectedIncomeTypes,
+            totalIncome: residentTransactions.reduce((sum, t) => sum + Number(t.amount), 0),
+            transactionCount: residentTransactions.length,
+            hasIncomeIssues: missingIncomeTypes.length > 0,
+            missingIncomeTypes,
+            actualTransactions: residentTransactions.map(t => ({
+              id: t.id,
+              date: t.transaction_date,
+              amount: Number(t.amount),
+              category: t.category,
+              description: t.description,
+              paymentMethod: t.payment_method,
+              referenceNumber: t.reference_number,
+              status: t.status
+            }))
+          };
+        });
+
+        result.push({
+          nursingHomeId: nhData.nursingHomeId,
+          nursingHomeName: nhData.nursingHomeName,
+          month: monthDisplay,
+          monthSort: monthKey,
+          totalIncome: residentDetails.reduce((sum, r) => sum + r.totalIncome, 0),
+          totalTransactions: residentDetails.reduce((sum, r) => sum + r.transactionCount, 0),
+          residentDetails
+        });
+      });
+    });
+
+    return result.sort((a, b) => {
+      if (a.nursingHomeName !== b.nursingHomeName) {
+        return a.nursingHomeName.localeCompare(b.nursingHomeName);
+      }
+      return a.monthSort.localeCompare(b.monthSort);
+    });
+  }
+
+  private static calculateResidentsIncomePerNursingHomeMonthly(data: any[]) {
+    const totalNursingHomes = new Set(data.map(d => d.nursingHomeId)).size;
+    const totalRecords = data.length;
+    const totalIncome = data.reduce((sum, d) => sum + d.totalIncome, 0);
+    const totalTransactions = data.reduce((sum, d) => sum + d.totalTransactions, 0);
+    
+    // Calculate total unique residents with income issues
+    const allResidents = new Set();
+    const residentsWithIssues = new Set();
+    data.forEach(d => {
+      d.residentDetails.forEach((resident: any) => {
+        allResidents.add(resident.residentId);
+        if (resident.hasIncomeIssues) {
+          residentsWithIssues.add(resident.residentId);
+        }
+      });
+    });
+
+    return {
+      totalNursingHomes,
+      totalResidents: allResidents.size,
+      totalRecords,
+      totalIncome,
+      totalTransactions,
+      residentsWithIssues: residentsWithIssues.size,
+      averageIncomePerRecord: totalRecords > 0 ? totalIncome / totalRecords : 0,
+      averageTransactionsPerRecord: totalRecords > 0 ? totalTransactions / totalRecords : 0,
+      generatedAt: new Date().toISOString()
+    };
+  }
+
   private static async getResidentIncomeExpenseSummaryData(dateRange?: { start?: string; end?: string }, configId?: string) {
     // Get the nursing home ID from the report configuration
     let nursingHomeId: string | null = null;
@@ -419,7 +790,7 @@ export class ReportGenerator {
           item.city,
           item.state,
           item.capacity.toString(),
-          item.current_residents.toString(),
+          item.current_residents?.toString() || '0',
           `$${item.monthly_rate.toLocaleString()}`,
           item.status
         ]);
@@ -452,9 +823,9 @@ export class ReportGenerator {
         const rows: any[][] = [];
         data.forEach(item => {
           item.residentDetails.forEach((resident: any) => {
-            if (resident.transactions.length > 0) {
+            if (resident.actualTransactions && resident.actualTransactions.length > 0) {
               // Add individual transaction rows
-              resident.transactions.forEach((transaction: any) => {
+              resident.actualTransactions.forEach((transaction: any) => {
                 rows.push([
                   item.nursingHomeName,
                   item.month,
@@ -585,7 +956,7 @@ export class ReportGenerator {
           'Phone Number': item.phone_number,
           Email: item.email,
           Capacity: item.capacity,
-          'Current Residents': item.current_residents,
+          'Current Residents': item.current_residents || 0,
           'Monthly Rate': item.monthly_rate,
           Status: item.status,
           Administrator: item.administrator,
@@ -628,9 +999,9 @@ export class ReportGenerator {
         const excelData: any[] = [];
         data.forEach(item => {
           item.residentDetails.forEach((resident: any) => {
-            if (resident.transactions.length > 0) {
+            if (resident.actualTransactions && resident.actualTransactions.length > 0) {
               // Add individual transaction rows
-              resident.transactions.forEach((transaction: any) => {
+              resident.actualTransactions.forEach((transaction: any) => {
                 excelData.push({
                   'Nursing Home': item.nursingHomeName,
                   'Month': item.month,
