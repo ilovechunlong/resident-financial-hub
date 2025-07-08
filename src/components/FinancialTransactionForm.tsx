@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,10 +12,10 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useFinancialCategories, useAddFinancialTransaction } from '@/hooks/useFinancialTransactions';
+import { useFinancialCategories, useAddFinancialTransaction, useUpdateFinancialTransaction } from '@/hooks/useFinancialTransactions';
 import { useNursingHomes } from '@/hooks/useNursingHomes';
 import { useResidents } from '@/hooks/useResidents';
-import { FinancialTransactionFormData } from '@/types/financial';
+import { FinancialTransaction, FinancialTransactionFormData } from '@/types/financial';
 import { financialTransactionFormSchema, FinancialTransactionFormValues } from './forms/financialTransactionFormSchema';
 import { BasicTransactionFields } from './forms/BasicTransactionFields';
 import { AdditionalDetailsFields } from './forms/AdditionalDetailsFields';
@@ -22,17 +23,34 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 interface FinancialTransactionFormProps {
   onSuccess?: () => void;
+  initialData?: FinancialTransaction;
 }
 
-export function FinancialTransactionForm({ onSuccess }: FinancialTransactionFormProps) {
+export function FinancialTransactionForm({ onSuccess, initialData }: FinancialTransactionFormProps) {
   const { data: categories = [] } = useFinancialCategories();
   const { nursingHomes = [] } = useNursingHomes();
   const { residents = [] } = useResidents();
   const addTransaction = useAddFinancialTransaction();
+  const updateTransaction = useUpdateFinancialTransaction();
+
+  const isEditing = !!initialData;
 
   const form = useForm<FinancialTransactionFormValues>({
     resolver: zodResolver(financialTransactionFormSchema),
-    defaultValues: {
+    defaultValues: initialData ? {
+      transaction_type: initialData.transaction_type,
+      category: initialData.category,
+      amount: initialData.amount,
+      description: initialData.description || '',
+      transaction_date: initialData.transaction_date,
+      payment_method: initialData.payment_method,
+      reference_number: initialData.reference_number || '',
+      nursing_home_id: initialData.nursing_home_id || '',
+      resident_id: initialData.resident_id || '',
+      status: initialData.status,
+      is_recurring: initialData.is_recurring || false,
+      recurring_frequency: initialData.recurring_frequency,
+    } : {
       transaction_type: 'income',
       transaction_date: new Date().toISOString().split('T')[0],
       status: 'completed',
@@ -72,19 +90,28 @@ export function FinancialTransactionForm({ onSuccess }: FinancialTransactionForm
       nursing_home_id: values.nursing_home_id || undefined,
       resident_id: values.resident_id || undefined,
       status: values.status,
+      is_recurring: values.is_recurring,
+      recurring_frequency: values.recurring_frequency,
     };
 
-    await addTransaction.mutateAsync(transactionData);
-    form.reset();
+    if (isEditing && initialData) {
+      await updateTransaction.mutateAsync({ id: initialData.id, ...transactionData });
+    } else {
+      await addTransaction.mutateAsync(transactionData);
+    }
+    
+    if (!isEditing) {
+      form.reset();
+    }
     onSuccess?.();
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Add Financial Transaction</CardTitle>
+        <CardTitle>{isEditing ? 'Edit Transaction' : 'Add Financial Transaction'}</CardTitle>
         <CardDescription>
-          Record a new income or expense transaction
+          {isEditing ? 'Update the transaction details' : 'Record a new income or expense transaction'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -155,8 +182,15 @@ export function FinancialTransactionForm({ onSuccess }: FinancialTransactionForm
 
             <AdditionalDetailsFields form={form} />
 
-            <Button type="submit" className="w-full" disabled={addTransaction.isPending}>
-              {addTransaction.isPending ? 'Adding Transaction...' : 'Add Transaction'}
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={addTransaction.isPending || updateTransaction.isPending}
+            >
+              {addTransaction.isPending || updateTransaction.isPending 
+                ? (isEditing ? 'Updating Transaction...' : 'Adding Transaction...') 
+                : (isEditing ? 'Update Transaction' : 'Add Transaction')
+              }
             </Button>
           </form>
         </Form>

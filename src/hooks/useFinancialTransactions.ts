@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { FinancialTransaction, FinancialTransactionFormData } from '@/types/financial';
@@ -76,6 +77,54 @@ export const useAddFinancialTransaction = () => {
         variant: "destructive",
         title: "Error",
         description: "Failed to add financial transaction. Please try again.",
+      });
+    },
+  });
+};
+
+export const useUpdateFinancialTransaction = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ id, ...transactionData }: FinancialTransactionFormData & { id: string }): Promise<FinancialTransaction> => {
+      console.log('Updating financial transaction:', { id, ...transactionData });
+      
+      const { data, error } = await supabase
+        .from('financial_transactions')
+        .update(transactionData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating financial transaction:', error);
+        throw error;
+      }
+
+      console.log('Financial transaction updated:', data);
+      // Cast the data to match our TypeScript interface
+      return {
+        ...data,
+        transaction_type: data.transaction_type as 'income' | 'expense',
+        payment_method: data.payment_method as 'cash' | 'check' | 'credit_card' | 'bank_transfer' | 'insurance' | undefined,
+        recurring_frequency: data.recurring_frequency as 'weekly' | 'monthly' | 'quarterly' | 'yearly' | undefined,
+        status: data.status as 'pending' | 'completed' | 'cancelled'
+      };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['financial-transactions'] });
+      toast({
+        title: "Success",
+        description: "Financial transaction updated successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      console.error('Failed to update financial transaction:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update financial transaction. Please try again.",
       });
     },
   });
