@@ -4,7 +4,6 @@ import { DataFetchers } from './reports/dataFetchers';
 import { SummaryCalculators } from './reports/summaryCalculators';
 import { MonthlyIncomeReportGenerator } from './reports/monthlyIncomeReport';
 import { IncomeExpenseReportGenerator } from './reports/incomeExpenseReport';
-import { NursingHomeExpenseReportGenerator } from './reports/nursingHomeExpenseReport';
 import { BasicReportGenerators } from './reports/basicReports';
 import { ReportExporter } from './reports/exportUtils';
 
@@ -52,10 +51,6 @@ export class ReportGenerator {
         case 'resident_income_expense_summary':
           data = await IncomeExpenseReportGenerator.generateData(dateRange, configId);
           summary = SummaryCalculators.calculateResidentIncomeExpenseSummary(data);
-          break;
-        case 'nursing_home_expense_summary':
-          data = await NursingHomeExpenseReportGenerator.generateData(dateRange, configId);
-          summary = SummaryCalculators.calculateNursingHomeExpenseSummary(data);
           break;
         default:
           throw new Error(`Unknown report type: ${reportType}`);

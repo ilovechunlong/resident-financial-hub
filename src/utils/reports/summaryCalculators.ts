@@ -1,108 +1,122 @@
 
-import { MonthlyIncomeReportItem, IncomeExpenseSummaryReportItem } from '@/types/reportTypes';
-import { NursingHomeExpenseSummaryItem } from './nursingHomeExpenseReport';
-
 export class SummaryCalculators {
-  static calculateFinancialSummary(transactions: any[]) {
-    const totalTransactions = transactions.length;
-    const totalIncome = transactions
-      .filter(t => t.transaction_type === 'income')
-      .reduce((sum, t) => sum + Number(t.amount), 0);
-    const totalExpenses = transactions
-      .filter(t => t.transaction_type === 'expense')
-      .reduce((sum, t) => sum + Number(t.amount), 0);
+  static calculateFinancialSummary(data: any[]) {
+    const totalTransactions = data.length;
+    const totalAmount = data.reduce((sum, item) => sum + Number(item.amount), 0);
+    const totalIncome = data.filter(item => item.transaction_type === 'income').reduce((sum, item) => sum + Number(item.amount), 0);
+    const totalExpenses = data.filter(item => item.transaction_type === 'expense').reduce((sum, item) => sum + Number(item.amount), 0);
 
     return {
       totalTransactions,
+      totalAmount,
       totalIncome,
       totalExpenses,
       netAmount: totalIncome - totalExpenses,
+      generatedAt: new Date().toISOString()
     };
   }
 
-  static calculateResidentSummary(residents: any[]) {
+  static calculateNursingHomeSummary(data: any[]) {
     return {
-      totalResidents: residents.length,
-      activeResidents: residents.filter(r => r.status === 'active').length,
-      nursingHomes: [...new Set(residents.map(r => r.nursing_home_id))].length,
+      totalNursingHomes: data.length,
+      totalCapacity: data.reduce((sum, item) => sum + item.capacity, 0),
+      averageCapacity: data.length > 0 ? data.reduce((sum, item) => sum + item.capacity, 0) / data.length : 0,
+      generatedAt: new Date().toISOString()
+    };
+  }
+
+  static calculateResidentSummary(data: any[]) {
+    return {
+      totalResidents: data.length,
+      activeResidents: data.filter(r => r.status === 'active').length,
+      generatedAt: new Date().toISOString()
     };
   }
 
   static calculateResidentAnnualFinancialSummary(data: any[]) {
+    const totalIncome = data.reduce((sum, r) => sum + r.totalIncome, 0);
+    const totalExpenses = data.reduce((sum, r) => sum + r.totalExpenses, 0);
+
     return {
-      totalRecords: data.length,
-      reportGenerated: new Date().toISOString(),
+      totalResidents: data.length,
+      totalIncome,
+      totalExpenses,
+      netAmount: totalIncome - totalExpenses,
+      averageIncomePerResident: data.length > 0 ? totalIncome / data.length : 0,
+      averageExpensePerResident: data.length > 0 ? totalExpenses / data.length : 0,
+      generatedAt: new Date().toISOString()
     };
   }
 
   static calculateNursingHomeAnnualFinancialSummary(data: any[]) {
+    const totalIncome = data.reduce((sum, nh) => sum + nh.totalIncome, 0);
+    const totalExpenses = data.reduce((sum, nh) => sum + nh.totalExpenses, 0);
+
     return {
-      totalRecords: data.length,
-      reportGenerated: new Date().toISOString(),
+      totalNursingHomes: data.length,
+      totalIncome,
+      totalExpenses,
+      netAmount: totalIncome - totalExpenses,
+      averageIncomePerNursingHome: data.length > 0 ? totalIncome / data.length : 0,
+      averageExpensePerNursingHome: data.length > 0 ? totalExpenses / data.length : 0,
+      generatedAt: new Date().toISOString()
     };
   }
 
-  static calculateResidentsIncomePerNursingHomeMonthly(data: MonthlyIncomeReportItem[]) {
-    const totalIncome = data.reduce((sum, item) => sum + item.totalIncome, 0);
-    const totalTransactions = data.reduce((sum, item) => sum + item.totalTransactions, 0);
-    const nursingHomesCount = new Set(data.map(item => item.nursingHomeId)).size;
-    const monthsCount = new Set(data.map(item => item.monthSort)).size;
+  static calculateResidentsIncomePerNursingHomeMonthly(data: any[]) {
+    const totalNursingHomes = new Set(data.map(d => d.nursingHomeId)).size;
+    const totalRecords = data.length;
+    const totalIncome = data.reduce((sum, d) => sum + d.totalIncome, 0);
+    const totalTransactions = data.reduce((sum, d) => sum + d.totalTransactions, 0);
+    
+    const allResidents = new Set();
+    const residentsWithIssues = new Set();
+    data.forEach(d => {
+      d.residentDetails.forEach((resident: any) => {
+        allResidents.add(resident.residentId);
+        if (resident.hasIncomeIssues) {
+          residentsWithIssues.add(resident.residentId);
+        }
+      });
+    });
 
     return {
+      totalNursingHomes,
+      totalResidents: allResidents.size,
+      totalRecords,
       totalIncome,
       totalTransactions,
-      nursingHomesCount,
-      monthsCount,
-      averageIncomePerMonth: monthsCount > 0 ? totalIncome / monthsCount : 0,
-      averageIncomePerNursingHome: nursingHomesCount > 0 ? totalIncome / nursingHomesCount : 0,
+      residentsWithIssues: residentsWithIssues.size,
+      averageIncomePerRecord: totalRecords > 0 ? totalIncome / totalRecords : 0,
+      averageTransactionsPerRecord: totalRecords > 0 ? totalTransactions / totalRecords : 0,
+      generatedAt: new Date().toISOString()
     };
   }
 
-  static calculateResidentIncomeExpenseSummary(data: IncomeExpenseSummaryReportItem[]) {
-    const totalIncome = data.reduce((sum, item) => sum + item.totalIncome, 0);
-    const totalExpenses = data.reduce((sum, item) => sum + item.totalExpenses, 0);
+  static calculateResidentIncomeExpenseSummary(data: any[]) {
+    const totalNursingHomes = new Set(data.map(d => d.nursingHomeId)).size;
+    const totalRecords = data.length;
+    const totalIncome = data.reduce((sum, d) => sum + d.totalIncome, 0);
+    const totalExpenses = data.reduce((sum, d) => sum + d.totalExpenses, 0);
     const netAmount = totalIncome - totalExpenses;
-    const nursingHomesCount = new Set(data.map(item => item.nursingHomeId)).size;
-    const monthsCount = new Set(data.map(item => item.monthSort)).size;
+    
+    const allResidents = new Set();
+    data.forEach(d => {
+      d.residentSummaries.forEach((resident: any) => {
+        allResidents.add(resident.residentId);
+      });
+    });
 
     return {
+      totalNursingHomes,
+      totalResidents: allResidents.size,
+      totalRecords,
       totalIncome,
       totalExpenses,
       netAmount,
-      nursingHomesCount,
-      monthsCount,
-      averageNetPerMonth: monthsCount > 0 ? netAmount / monthsCount : 0,
-    };
-  }
-
-  static calculateNursingHomeExpenseSummary(data: NursingHomeExpenseSummaryItem[]) {
-    const totalExpenses = data.reduce((sum, item) => sum + item.totalExpenses, 0);
-    const totalTransactions = data.reduce((sum, item) => sum + item.totalTransactions, 0);
-    const nursingHomesCount = new Set(data.map(item => item.nursingHomeId)).size;
-    const monthsCount = new Set(data.map(item => item.monthSort)).size;
-    
-    // Get top categories across all nursing homes
-    const categoryTotals = new Map<string, number>();
-    data.forEach(item => {
-      item.expenseCategories.forEach(category => {
-        const current = categoryTotals.get(category.category) || 0;
-        categoryTotals.set(category.category, current + category.totalAmount);
-      });
-    });
-    
-    const topCategories = Array.from(categoryTotals.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([category, amount]) => ({ category, amount }));
-
-    return {
-      totalExpenses,
-      totalTransactions,
-      nursingHomesCount,
-      monthsCount,
-      averageExpensesPerMonth: monthsCount > 0 ? totalExpenses / monthsCount : 0,
-      averageExpensesPerNursingHome: nursingHomesCount > 0 ? totalExpenses / nursingHomesCount : 0,
-      topCategories,
+      averageIncomePerRecord: totalRecords > 0 ? totalIncome / totalRecords : 0,
+      averageExpensePerRecord: totalRecords > 0 ? totalExpenses / totalRecords : 0,
+      generatedAt: new Date().toISOString()
     };
   }
 }

@@ -25,7 +25,7 @@ export const useGenerateReport = () => {
         throw configError;
       }
 
-      // Generate the actual report data
+      // Generate the actual report data - fix the function call
       const reportData = await ReportGenerator.generateReportData(
         configurationId,
         config.report_type,
@@ -35,22 +35,19 @@ export const useGenerateReport = () => {
         }
       );
 
-      // Store the generated report in the database with proper data structure
-      const reportDataToStore = {
-        summary: reportData.summary,
-        total_records: reportData.data.length,
-        generated_at: new Date().toISOString(),
-        report_type: config.report_type,
-        date_range: reportData.dateRange,
-        nursing_home_id: config.nursing_home_id,
-        data: reportData.data // Include the actual data for preview
-      };
-
+      // Store the generated report in the database
       const { data, error } = await supabase
         .from('generated_reports')
         .insert([{
           configuration_id: configurationId,
-          report_data: reportDataToStore,
+          report_data: {
+            summary: reportData.summary,
+            total_records: reportData.data.length,
+            generated_at: new Date().toISOString(),
+            report_type: config.report_type,
+            date_range: reportData.dateRange,
+            nursing_home_id: config.nursing_home_id
+          },
           status: 'completed'
         }])
         .select()
