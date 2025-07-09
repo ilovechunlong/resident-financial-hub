@@ -85,15 +85,24 @@ export function ReportPreview({
                 <Badge variant="outline">{item.month}</Badge>
               </div>
               
-              <div className="mb-3 p-2 bg-blue-50 rounded grid grid-cols-3 gap-4">
+              {/* Income Row */}
+              <div className="mb-2 p-2 bg-green-50 rounded">
                 <div className="text-sm">
                   <span className="font-medium">Total Income:</span>
                   <div className="font-semibold text-green-600">${item.totalIncome.toLocaleString()}</div>
                 </div>
+              </div>
+
+              {/* Expenses Row */}
+              <div className="mb-2 p-2 bg-red-50 rounded">
                 <div className="text-sm">
                   <span className="font-medium">Total Expenses:</span>
                   <div className="font-semibold text-red-600">${item.totalExpenses.toLocaleString()}</div>
                 </div>
+              </div>
+
+              {/* Net Amount Row */}
+              <div className="mb-3 p-2 bg-blue-50 rounded">
                 <div className="text-sm">
                   <span className="font-medium">Net Amount:</span>
                   <div className={`font-semibold ${item.netAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -114,7 +123,7 @@ export function ReportPreview({
                           Net: ${resident.netAmount.toLocaleString()}
                         </span>
                       </div>
-                      <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+                      <div className="space-y-1 text-xs text-gray-600">
                         <div>Income: ${resident.monthlyIncome.toLocaleString()}</div>
                         <div>Expenses: ${resident.totalExpenses.toLocaleString()}</div>
                       </div>
