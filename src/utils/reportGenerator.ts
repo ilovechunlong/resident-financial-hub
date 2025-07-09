@@ -17,13 +17,23 @@ export class ReportGenerator {
     let summary: Record<string, any> = {};
     
     try {
+      // Get the configuration to access nursing_home_id filter
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data: config } = await supabase
+        .from('report_configurations')
+        .select('nursing_home_id')
+        .eq('id', configId)
+        .single();
+      
+      const nursingHomeId = config?.nursing_home_id;
+      
       switch (reportType) {
         case 'transaction_report':
           data = await DataFetchers.getFinancialTransactions(dateRange);
           summary = SummaryCalculators.calculateFinancialSummary(data);
           break;
         case 'resident_report':
-          data = await DataFetchers.getResidents();
+          data = await DataFetchers.getResidents(nursingHomeId);
           summary = SummaryCalculators.calculateResidentSummary(data);
           break;
         case 'resident_annual_financial_summary':

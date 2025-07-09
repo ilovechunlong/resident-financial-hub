@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { DateRange } from './types';
 
@@ -35,8 +34,8 @@ export class DataFetchers {
     return data || [];
   }
 
-  static async getResidents() {
-    const { data, error } = await supabase
+  static async getResidents(nursingHomeId?: string | null) {
+    let query = supabase
       .from('residents')
       .select(`
         *,
@@ -46,6 +45,12 @@ export class DataFetchers {
         )
       `);
     
+    // Apply nursing home filter if provided
+    if (nursingHomeId) {
+      query = query.eq('nursing_home_id', nursingHomeId);
+    }
+    
+    const { data, error } = await query;
     if (error) throw error;
     return data || [];
   }
