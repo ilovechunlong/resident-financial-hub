@@ -91,11 +91,8 @@ export class ReportExporter {
 
   private static getTableColumns(reportType: string): string[] {
     switch (reportType) {
-      case 'financial_summary':
       case 'transaction_report':
-        return ['Date', 'Type', 'Category', 'Amount', 'Description', 'Status'];
-      case 'nursing_home_report':
-        return ['Name', 'City', 'State', 'Capacity', 'Current Residents', 'Monthly Rate', 'Status'];
+        return ['Date', 'Type', 'Category', 'Nursing Home', 'Resident', 'Amount', 'Description', 'Status'];
       case 'resident_report':
         return ['Name', 'Nursing Home', 'Room', 'Care Level', 'Admission Date', 'Status'];
       case 'resident_annual_financial_summary':
@@ -113,24 +110,15 @@ export class ReportExporter {
 
   private static getTableRows(data: any[], reportType: string): any[][] {
     switch (reportType) {
-      case 'financial_summary':
       case 'transaction_report':
         return data.map(item => [
           format(new Date(item.transaction_date), 'MMM dd, yyyy'),
           item.transaction_type,
           item.category,
+          item.nursing_home_name || '-',
+          item.resident_name || '-',
           `$${parseFloat(item.amount).toLocaleString()}`,
           item.description || '-',
-          item.status
-        ]);
-      case 'nursing_home_report':
-        return data.map(item => [
-          item.name,
-          item.city,
-          item.state,
-          item.capacity.toString(),
-          item.current_residents?.toString() || '0',
-          `$${item.monthly_rate.toLocaleString()}`,
           item.status
         ]);
       case 'resident_report':
@@ -227,16 +215,9 @@ export class ReportExporter {
 
   private static getColumnStyles(reportType: string): Record<string, any> {
     switch (reportType) {
-      case 'financial_summary':
       case 'transaction_report':
         return {
           3: { halign: 'right' },
-        };
-      case 'nursing_home_report':
-        return {
-          3: { halign: 'right' },
-          4: { halign: 'right' },
-          5: { halign: 'right' },
         };
       case 'resident_annual_financial_summary':
         return {
@@ -269,33 +250,18 @@ export class ReportExporter {
 
   private static formatDataForExcel(data: any[], reportType: string): any[] {
     switch (reportType) {
-      case 'financial_summary':
       case 'transaction_report':
         return data.map(item => ({
           Date: format(new Date(item.transaction_date), 'MMM dd, yyyy'),
           Type: item.transaction_type,
           Category: item.category,
+          'Nursing Home': item.nursing_home_name || '',
+          Resident: item.resident_name || '',
           Amount: parseFloat(item.amount),
           Description: item.description || '',
           Status: item.status,
           'Reference Number': item.reference_number || '',
           'Payment Method': item.payment_method || ''
-        }));
-      case 'nursing_home_report':
-        return data.map(item => ({
-          Name: item.name,
-          Address: item.address,
-          City: item.city,
-          State: item.state,
-          'Zip Code': item.zip_code,
-          'Phone Number': item.phone_number,
-          Email: item.email,
-          Capacity: item.capacity,
-          'Current Residents': item.current_residents || 0,
-          'Monthly Rate': item.monthly_rate,
-          Status: item.status,
-          Administrator: item.administrator,
-          'License Number': item.license_number
         }));
       case 'resident_report':
         return data.map(item => ({

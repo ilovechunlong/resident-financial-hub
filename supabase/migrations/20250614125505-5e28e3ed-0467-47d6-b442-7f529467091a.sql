@@ -3,7 +3,7 @@
 CREATE TABLE public.report_configurations (
   id uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   name text NOT NULL,
-  report_type text NOT NULL CHECK (report_type IN ('financial_summary', 'transaction_report', 'nursing_home_report', 'resident_report')),
+  report_type text NOT NULL CHECK (report_type IN ('transaction_report', 'resident_report')),
   filters jsonb DEFAULT '{}',
   date_range_start date,
   date_range_end date,

@@ -18,6 +18,8 @@ import { Loader2, Edit, Trash2 } from 'lucide-react';
 import { TransactionFiltersComponent, TransactionFilters } from './financial/TransactionFilters';
 import { TransactionsPagination } from './financial/TransactionsPagination';
 import { TransactionEditDialog } from './financial/TransactionEditDialog';
+import { useNursingHomes } from '@/hooks/useNursingHomes';
+import { useResidents } from '@/hooks/useResidents';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -32,6 +34,9 @@ export function FinancialTransactionsList() {
     status: undefined,
     category: undefined,
   });
+
+  const { nursingHomes = [] } = useNursingHomes();
+  const { residents = [] } = useResidents();
 
   // Filter transactions based on current filters
   const filteredTransactions = useMemo(() => {
@@ -196,6 +201,8 @@ export function FinancialTransactionsList() {
                       <TableHead>Date</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Category</TableHead>
+                      <TableHead>Nursing Home</TableHead>
+                      <TableHead>Resident</TableHead>
                       <TableHead>Amount</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Payment Method</TableHead>
@@ -204,69 +211,82 @@ export function FinancialTransactionsList() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paginatedTransactions.map((transaction: FinancialTransaction) => (
-                      <TableRow key={transaction.id}>
-                        <TableCell>
-                          {format(new Date(transaction.transaction_date), 'MMM dd, yyyy')}
-                        </TableCell>
-                        <TableCell>
-                          <Badge 
-                            variant={transaction.transaction_type === 'income' ? 'default' : 'secondary'}
-                            className={transaction.transaction_type === 'income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}
-                          >
-                            {transaction.transaction_type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="font-medium">{transaction.category}</TableCell>
-                        <TableCell>
-                          <span className={`font-medium ${getTransactionTypeColor(transaction.transaction_type)}`}>
-                            {formatAmount(transaction.amount, transaction.transaction_type)}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={getStatusBadgeVariant(transaction.status)}>
-                            {transaction.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {transaction.payment_method ? (
-                            <span className="capitalize">{transaction.payment_method.replace('_', ' ')}</span>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {transaction.description ? (
-                            <span className="text-sm">{transaction.description}</span>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex gap-2 justify-end">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEditTransaction(transaction)}
+                    {paginatedTransactions.map((transaction: FinancialTransaction) => {
+                      const nursingHome = transaction.nursing_home_id
+                        ? nursingHomes.find(home => home.id === transaction.nursing_home_id)
+                        : undefined;
+                      const resident = transaction.resident_id
+                        ? residents.find(res => res.id === transaction.resident_id)
+                        : undefined;
+                      return (
+                        <TableRow key={transaction.id}>
+                          <TableCell>
+                            {format(new Date(transaction.transaction_date), 'MMM dd, yyyy')}
+                          </TableCell>
+                          <TableCell>
+                            <Badge 
+                              variant={transaction.transaction_type === 'income' ? 'default' : 'secondary'}
+                              className={transaction.transaction_type === 'income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}
                             >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDeleteTransaction(transaction.id)}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                              {transaction.transaction_type}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="font-medium">{transaction.category}</TableCell>
+                          <TableCell>
+                            {nursingHome ? nursingHome.name : <span className="text-muted-foreground">-</span>}
+                          </TableCell>
+                          <TableCell>
+                            {resident ? `${resident.first_name} ${resident.last_name}` : <span className="text-muted-foreground">-</span>}
+                          </TableCell>
+                          <TableCell>
+                            <span className={`font-medium ${getTransactionTypeColor(transaction.transaction_type)}`}>
+                              {formatAmount(transaction.amount, transaction.transaction_type)}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={getStatusBadgeVariant(transaction.status)}>
+                              {transaction.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {transaction.payment_method ? (
+                              <span className="capitalize">{transaction.payment_method.replace('_', ' ')}</span>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {transaction.description ? (
+                              <span className="text-sm">{transaction.description}</span>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex gap-2 justify-end">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEditTransaction(transaction)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDeleteTransaction(transaction.id)}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
-              
               {totalPages > 1 && (
                 <div className="flex justify-center mt-6">
                   <TransactionsPagination
@@ -280,7 +300,6 @@ export function FinancialTransactionsList() {
           )}
         </CardContent>
       </Card>
-
       <TransactionEditDialog
         transaction={editingTransaction}
         isOpen={isEditDialogOpen}

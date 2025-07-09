@@ -18,17 +18,9 @@ export class ReportGenerator {
     
     try {
       switch (reportType) {
-        case 'financial_summary':
-          data = await DataFetchers.getFinancialTransactions(dateRange);
-          summary = SummaryCalculators.calculateFinancialSummary(data);
-          break;
         case 'transaction_report':
           data = await DataFetchers.getFinancialTransactions(dateRange);
           summary = SummaryCalculators.calculateFinancialSummary(data);
-          break;
-        case 'nursing_home_report':
-          data = await DataFetchers.getNursingHomes();
-          summary = SummaryCalculators.calculateNursingHomeSummary(data);
           break;
         case 'resident_report':
           data = await DataFetchers.getResidents();

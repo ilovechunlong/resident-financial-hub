@@ -6,7 +6,7 @@ export class DataFetchers {
   static async getFinancialTransactions(dateRange?: DateRange) {
     let query = supabase
       .from('financial_transactions')
-      .select('*')
+      .select(`*, residents:resident_id (first_name, last_name, nursing_home_id, nursing_homes (name)), nursing_homes:nursing_home_id (name)`)
       .eq('status', 'completed');
 
     if (dateRange?.start) {
@@ -18,7 +18,12 @@ export class DataFetchers {
 
     const { data, error } = await query;
     if (error) throw error;
-    return data || [];
+    // Map resident and nursing home names for each transaction
+    return (data || []).map((tx: any) => ({
+      ...tx,
+      resident_name: tx.residents ? `${tx.residents.first_name} ${tx.residents.last_name}` : '-',
+      nursing_home_name: tx.nursing_homes ? tx.nursing_homes.name : (tx.residents?.nursing_homes?.name || '-')
+    }));
   }
 
   static async getNursingHomes() {

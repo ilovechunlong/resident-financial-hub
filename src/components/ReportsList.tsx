@@ -58,9 +58,7 @@ export function ReportsList() {
 
   const getReportTypeLabel = (type: string) => {
     const labels = {
-      'financial_summary': 'Financial Summary',
       'transaction_report': 'Transaction Report',
-      'nursing_home_report': 'Nursing Home Report',
       'resident_report': 'Resident Report',
       'resident_annual_financial_summary': 'Resident Annual Financial Summary',
       'nursing_home_annual_financial_summary': 'Nursing Home Annual Financial Summary',
