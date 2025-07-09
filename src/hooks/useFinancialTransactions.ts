@@ -3,19 +3,58 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { FinancialTransaction, FinancialTransactionFormData } from '@/types/financial';
 import { useToast } from '@/hooks/use-toast';
+import { TransactionFilters } from '@/components/financial/TransactionFilters';
 
-export const useFinancialTransactions = () => {
+export const useFinancialTransactions = (filters?: TransactionFilters) => {
   const { toast } = useToast();
 
   return useQuery({
-    queryKey: ['financial-transactions'],
+    queryKey: ['financial-transactions', filters],
     queryFn: async (): Promise<FinancialTransaction[]> => {
-      console.log('Fetching financial transactions...');
+      console.log('Fetching financial transactions with filters:', filters);
       
-      const { data, error } = await supabase
+      let query = supabase
         .from('financial_transactions')
         .select('*')
         .order('transaction_date', { ascending: false });
+
+      // Apply filters
+      if (filters) {
+        // Date range filters
+        if (filters.dateRange.from) {
+          query = query.gte('transaction_date', filters.dateRange.from.toISOString().split('T')[0]);
+        }
+        if (filters.dateRange.to) {
+          query = query.lte('transaction_date', filters.dateRange.to.toISOString().split('T')[0]);
+        }
+
+        // Transaction type filter
+        if (filters.type && filters.type !== 'all') {
+          query = query.eq('transaction_type', filters.type);
+        }
+
+        // Status filter
+        if (filters.status && filters.status !== 'all') {
+          query = query.eq('status', filters.status);
+        }
+
+        // Category filter
+        if (filters.category) {
+          query = query.ilike('category', `%${filters.category}%`);
+        }
+
+        // Nursing home filter
+        if (filters.nursingHomeId) {
+          query = query.eq('nursing_home_id', filters.nursingHomeId);
+        }
+
+        // Resident filter
+        if (filters.residentId) {
+          query = query.eq('resident_id', filters.residentId);
+        }
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error('Error fetching financial transactions:', error);

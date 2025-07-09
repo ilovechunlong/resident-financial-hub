@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -24,7 +24,6 @@ import { useResidents } from '@/hooks/useResidents';
 const ITEMS_PER_PAGE = 10;
 
 export function FinancialTransactionsList() {
-  const { data: transactions = [], isLoading, error, refetch } = useFinancialTransactions();
   const [currentPage, setCurrentPage] = useState(1);
   const [editingTransaction, setEditingTransaction] = useState<FinancialTransaction | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -33,50 +32,18 @@ export function FinancialTransactionsList() {
     type: undefined,
     status: undefined,
     category: undefined,
+    nursingHomeId: undefined,
+    residentId: undefined,
   });
 
-  const { nursingHomes = [] } = useNursingHomes();
-  const { residents = [] } = useResidents();
+  const { data: transactions = [], isLoading, error, refetch } = useFinancialTransactions(filters);
+  const { data: nursingHomes = [] } = useNursingHomes();
+  const { data: residents = [] } = useResidents();
 
-  // Filter transactions based on current filters
-  const filteredTransactions = useMemo(() => {
-    return transactions.filter(transaction => {
-      // Date range filter
-      if (filters.dateRange.from) {
-        const transactionDate = new Date(transaction.transaction_date);
-        if (transactionDate < filters.dateRange.from) return false;
-      }
-      if (filters.dateRange.to) {
-        const transactionDate = new Date(transaction.transaction_date);
-        if (transactionDate > filters.dateRange.to) return false;
-      }
-      
-      // Type filter
-      if (filters.type && filters.type !== 'all' && transaction.transaction_type !== filters.type) {
-        return false;
-      }
-      
-      // Status filter
-      if (filters.status && filters.status !== 'all' && transaction.status !== filters.status) {
-        return false;
-      }
-      
-      // Category filter
-      if (filters.category && !transaction.category.toLowerCase().includes(filters.category.toLowerCase())) {
-        return false;
-      }
-      
-      return true;
-    });
-  }, [transactions, filters]);
-
-  // Paginate filtered transactions
-  const paginatedTransactions = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredTransactions.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredTransactions, currentPage]);
-
-  const totalPages = Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE);
+  // Paginate transactions (now done on filtered results from backend)
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedTransactions = transactions.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(transactions.length / ITEMS_PER_PAGE);
 
   const handleFiltersChange = (newFilters: TransactionFilters) => {
     setFilters(newFilters);
@@ -89,6 +56,8 @@ export function FinancialTransactionsList() {
       type: undefined,
       status: undefined,
       category: undefined,
+      nursingHomeId: undefined,
+      residentId: undefined,
     });
     setCurrentPage(1);
   };
@@ -177,19 +146,17 @@ export function FinancialTransactionsList() {
           <CardTitle>Recent Transactions</CardTitle>
           <CardDescription>
             View and manage all financial transactions
-            {filteredTransactions.length !== transactions.length && (
-              <span className="ml-2 text-sm">
-                ({filteredTransactions.length} of {transactions.length} transactions)
-              </span>
-            )}
+            <span className="ml-2 text-sm">
+              ({transactions.length} transactions found)
+            </span>
           </CardDescription>
         </CardHeader>
         <CardContent>
           {paginatedTransactions.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">
               {transactions.length === 0 
-                ? "No transactions found. Add your first transaction above."
-                : "No transactions match your current filters."
+                ? "No transactions found matching your filters."
+                : "No transactions found. Add your first transaction above."
               }
             </p>
           ) : (

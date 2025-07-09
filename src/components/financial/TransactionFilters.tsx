@@ -10,6 +10,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useNursingHomes } from '@/hooks/useNursingHomes';
+import { useResidents } from '@/hooks/useResidents';
 
 export interface TransactionFilters {
   dateRange: {
@@ -19,6 +21,8 @@ export interface TransactionFilters {
   type?: 'income' | 'expense' | 'all';
   status?: 'pending' | 'completed' | 'cancelled' | 'all';
   category?: string;
+  nursingHomeId?: string;
+  residentId?: string;
 }
 
 interface TransactionFiltersProps {
@@ -32,17 +36,22 @@ export function TransactionFiltersComponent({
   onFiltersChange, 
   onClearFilters 
 }: TransactionFiltersProps) {
+  const { data: nursingHomes = [] } = useNursingHomes();
+  const { data: residents = [] } = useResidents();
+
   const hasActiveFilters = 
     filters.dateRange.from || 
     filters.dateRange.to || 
     (filters.type && filters.type !== 'all') ||
     (filters.status && filters.status !== 'all') ||
-    filters.category;
+    filters.category ||
+    filters.nursingHomeId ||
+    filters.residentId;
 
   return (
     <Card className="mb-6">
       <CardContent className="pt-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           {/* Date Range Filter */}
           <div className="space-y-2">
             <Label>Date Range</Label>
@@ -152,6 +161,61 @@ export function TransactionFiltersComponent({
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
                 <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Nursing Home Filter */}
+          <div className="space-y-2">
+            <Label>Nursing Home</Label>
+            <Select 
+              value={filters.nursingHomeId || 'all'} 
+              onValueChange={(value) => 
+                onFiltersChange({
+                  ...filters,
+                  nursingHomeId: value === 'all' ? undefined : value,
+                  residentId: undefined // Clear resident filter when nursing home changes
+                })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="All Nursing Homes" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Nursing Homes</SelectItem>
+                {nursingHomes.map((home) => (
+                  <SelectItem key={home.id} value={home.id}>
+                    {home.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Resident Filter */}
+          <div className="space-y-2">
+            <Label>Resident</Label>
+            <Select 
+              value={filters.residentId || 'all'} 
+              onValueChange={(value) => 
+                onFiltersChange({
+                  ...filters,
+                  residentId: value === 'all' ? undefined : value
+                })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="All Residents" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Residents</SelectItem>
+                {residents
+                  .filter(resident => !filters.nursingHomeId || resident.nursing_home_id === filters.nursingHomeId)
+                  .map((resident) => (
+                    <SelectItem key={resident.id} value={resident.id}>
+                      {resident.first_name} {resident.last_name}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
