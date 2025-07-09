@@ -36,8 +36,8 @@ export function TransactionFiltersComponent({
   onFiltersChange, 
   onClearFilters 
 }: TransactionFiltersProps) {
-  const { data: nursingHomes = [] } = useNursingHomes();
-  const { data: residents = [] } = useResidents();
+  const { nursingHomes = [] } = useNursingHomes();
+  const { residents = [] } = useResidents();
 
   const hasActiveFilters = 
     filters.dateRange.from || 

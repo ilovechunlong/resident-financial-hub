@@ -37,8 +37,8 @@ export function FinancialTransactionsList() {
   });
 
   const { data: transactions = [], isLoading, error, refetch } = useFinancialTransactions(filters);
-  const { data: nursingHomes = [] } = useNursingHomes();
-  const { data: residents = [] } = useResidents();
+  const { nursingHomes = [] } = useNursingHomes();
+  const { residents = [] } = useResidents();
 
   // Paginate transactions (now done on filtered results from backend)
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
