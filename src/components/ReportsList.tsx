@@ -64,6 +64,7 @@ export function ReportsList() {
       'nursing_home_annual_financial_summary': 'Nursing Home Annual Financial Summary',
       'residents_income_per_nursing_home_monthly': 'Residents Income per Nursing Home Monthly',
       'resident_income_expense_summary': 'Resident Income Expense Summary Report',
+      'nursing_home_expense_summary': 'Nursing Home Expense Summary Report',
     };
     return labels[type as keyof typeof labels] || type;
   };
