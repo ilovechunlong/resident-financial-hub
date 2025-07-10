@@ -12,8 +12,17 @@ export const financialTransactionFormSchema = z.object({
   nursing_home_id: z.string().optional(),
   resident_id: z.string().optional(),
   is_recurring: z.boolean().default(false),
-  recurring_frequency: z.enum(['weekly', 'monthly', 'quarterly', 'yearly']).optional(),
+  recurring_frequency: z.enum(['weekly', 'monthly', 'quarterly', 'yearly']).optional().nullable(),
   status: z.enum(['pending', 'completed', 'cancelled']).default('completed'),
+}).refine((data) => {
+  // If is_recurring is true, then recurring_frequency must be provided
+  if (data.is_recurring && !data.recurring_frequency) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Recurring frequency is required when transaction is recurring",
+  path: ["recurring_frequency"],
 });
 
 export type FinancialTransactionFormValues = z.infer<typeof financialTransactionFormSchema>;

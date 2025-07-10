@@ -19,6 +19,7 @@ import { FinancialTransaction, FinancialTransactionFormData } from '@/types/fina
 import { financialTransactionFormSchema, FinancialTransactionFormValues } from './forms/financialTransactionFormSchema';
 import { BasicTransactionFields } from './forms/BasicTransactionFields';
 import { AdditionalDetailsFields } from './forms/AdditionalDetailsFields';
+import { RecurringTransactionFields } from './forms/RecurringTransactionFields';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface FinancialTransactionFormProps {
@@ -54,7 +55,7 @@ export function FinancialTransactionForm({ onSuccess, initialData }: FinancialTr
       resident_id: initialData.resident_id || '',
       status: initialData.status,
       is_recurring: initialData.is_recurring || false,
-      recurring_frequency: initialData.recurring_frequency,
+      recurring_frequency: initialData.recurring_frequency || undefined,
     } : {
       transaction_type: 'income',
       transaction_date: new Date().toISOString().split('T')[0],
@@ -65,6 +66,7 @@ export function FinancialTransactionForm({ onSuccess, initialData }: FinancialTr
   const watchTransactionType = form.watch('transaction_type');
   const watchResidentId = form.watch('resident_id');
   const watchNursingHomeId = form.watch('nursing_home_id');
+  const watchIsRecurring = form.watch('is_recurring');
 
   const transactionScope = watchResidentId ? 'resident' : 'nursing_home';
 
@@ -235,6 +237,8 @@ export function FinancialTransactionForm({ onSuccess, initialData }: FinancialTr
                 )}
               />
             </div>
+
+            <RecurringTransactionFields form={form} watchIsRecurring={watchIsRecurring} />
 
             <AdditionalDetailsFields form={form} />
 
