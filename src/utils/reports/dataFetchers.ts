@@ -124,4 +124,24 @@ export class DataFetchers {
     if (error) throw error;
     return data || [];
   }
+
+  static async getExpenseTransactions(nursingHomeIds: string[], dateRange?: DateRange) {
+    let query = supabase
+      .from('financial_transactions')
+      .select('*')
+      .eq('transaction_type', 'expense')
+      .in('nursing_home_id', nursingHomeIds)
+      .eq('status', 'completed');
+
+    if (dateRange?.start) {
+      query = query.gte('transaction_date', dateRange.start);
+    }
+    if (dateRange?.end) {
+      query = query.lte('transaction_date', dateRange.end);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  }
 }
