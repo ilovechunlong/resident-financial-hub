@@ -35,6 +35,11 @@ export function FinancialTransactionForm({ onSuccess, initialData }: FinancialTr
 
   const isEditing = !!initialData;
 
+  console.log('FinancialTransactionForm render:', {
+    isEditing,
+    initialData: initialData ? { id: initialData.id, category: initialData.category } : null
+  });
+
   const form = useForm<FinancialTransactionFormValues>({
     resolver: zodResolver(financialTransactionFormSchema),
     defaultValues: initialData ? {
@@ -79,31 +84,47 @@ export function FinancialTransactionForm({ onSuccess, initialData }: FinancialTr
   }, [watchNursingHomeId, watchResidentId, watchTransactionType, form]);
 
   const onSubmit = async (values: FinancialTransactionFormValues) => {
-    const transactionData: FinancialTransactionFormData = {
-      transaction_type: values.transaction_type,
-      category: values.category,
-      amount: values.amount,
-      description: values.description || undefined,
-      transaction_date: values.transaction_date,
-      payment_method: values.payment_method || undefined,
-      reference_number: values.reference_number || undefined,
-      nursing_home_id: values.nursing_home_id || undefined,
-      resident_id: values.resident_id || undefined,
-      status: values.status,
-      is_recurring: values.is_recurring,
-      recurring_frequency: values.recurring_frequency,
-    };
+    console.log('Form submitted with values:', values);
+    console.log('Is editing:', isEditing);
+    console.log('Initial data ID:', initialData?.id);
 
-    if (isEditing && initialData) {
-      await updateTransaction.mutateAsync({ id: initialData.id, ...transactionData });
-    } else {
-      await addTransaction.mutateAsync(transactionData);
+    try {
+      const transactionData: FinancialTransactionFormData = {
+        transaction_type: values.transaction_type,
+        category: values.category,
+        amount: values.amount,
+        description: values.description || undefined,
+        transaction_date: values.transaction_date,
+        payment_method: values.payment_method || undefined,
+        reference_number: values.reference_number || undefined,
+        nursing_home_id: values.nursing_home_id || undefined,
+        resident_id: values.resident_id || undefined,
+        status: values.status,
+        is_recurring: values.is_recurring,
+        recurring_frequency: values.recurring_frequency,
+      };
+
+      console.log('Prepared transaction data:', transactionData);
+
+      if (isEditing && initialData) {
+        console.log('Calling update mutation with ID:', initialData.id);
+        const result = await updateTransaction.mutateAsync({ id: initialData.id, ...transactionData });
+        console.log('Update mutation result:', result);
+      } else {
+        console.log('Calling add mutation');
+        const result = await addTransaction.mutateAsync(transactionData);
+        console.log('Add mutation result:', result);
+      }
+      
+      if (!isEditing) {
+        form.reset();
+      }
+      
+      console.log('Calling onSuccess callback');
+      onSuccess?.();
+    } catch (error) {
+      console.error('Error in form submission:', error);
     }
-    
-    if (!isEditing) {
-      form.reset();
-    }
-    onSuccess?.();
   };
 
   return (

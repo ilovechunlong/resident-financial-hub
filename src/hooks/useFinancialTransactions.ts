@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { FinancialTransaction, FinancialTransactionFormData } from '@/types/financial';
@@ -126,7 +127,9 @@ export const useUpdateFinancialTransaction = () => {
 
   return useMutation({
     mutationFn: async ({ id, ...transactionData }: FinancialTransactionFormData & { id: string }): Promise<FinancialTransaction> => {
-      console.log('Updating financial transaction with ID:', id, 'Data:', transactionData);
+      console.log('=== UPDATE MUTATION CALLED ===');
+      console.log('Transaction ID to update:', id);
+      console.log('Transaction data to update:', transactionData);
       
       // Clean the data to ensure we only send valid fields
       const updateData = {
@@ -144,6 +147,8 @@ export const useUpdateFinancialTransaction = () => {
         recurring_frequency: transactionData.recurring_frequency || null,
       };
 
+      console.log('Cleaned update data being sent to database:', updateData);
+
       const { data, error } = await supabase
         .from('financial_transactions')
         .update(updateData)
@@ -152,11 +157,20 @@ export const useUpdateFinancialTransaction = () => {
         .single();
 
       if (error) {
+        console.error('=== DATABASE UPDATE ERROR ===');
         console.error('Error updating financial transaction:', error);
+        console.error('Error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         throw error;
       }
 
+      console.log('=== DATABASE UPDATE SUCCESS ===');
       console.log('Financial transaction updated successfully:', data);
+      
       // Cast the data to match our TypeScript interface
       return {
         ...data,
@@ -166,14 +180,18 @@ export const useUpdateFinancialTransaction = () => {
         status: data.status as 'pending' | 'completed' | 'cancelled'
       };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('=== UPDATE MUTATION SUCCESS CALLBACK ===');
+      console.log('Updated transaction data:', data);
       queryClient.invalidateQueries({ queryKey: ['financial-transactions'] });
+      console.log('Query cache invalidated');
       toast({
         title: "Success",
         description: "Financial transaction updated successfully.",
       });
     },
     onError: (error: Error) => {
+      console.error('=== UPDATE MUTATION ERROR CALLBACK ===');
       console.error('Failed to update financial transaction:', error);
       toast({
         variant: "destructive",
