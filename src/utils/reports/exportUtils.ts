@@ -95,10 +95,6 @@ export class ReportExporter {
         return ['Date', 'Type', 'Category', 'Nursing Home', 'Resident', 'Amount', 'Description', 'Status'];
       case 'resident_report':
         return ['Name', 'Nursing Home', 'Room', 'Care Level', 'Admission Date', 'Status'];
-      case 'resident_annual_financial_summary':
-        return ['Resident Name', 'Transactions', 'Total Income', 'Total Expenses', 'Net Amount'];
-      case 'nursing_home_annual_financial_summary':
-        return ['Nursing Home', 'Transactions', 'Total Income', 'Total Expenses', 'Net Amount'];
       case 'residents_income_per_nursing_home_monthly':
         return ['Nursing Home', 'Month', 'Resident', 'Transaction Date', 'Amount', 'Category', 'Status', 'Issues'];
       case 'resident_income_expense_summary':
@@ -129,22 +125,6 @@ export class ReportExporter {
           item.care_level,
           format(new Date(item.admission_date), 'MMM dd, yyyy'),
           item.status
-        ]);
-      case 'resident_annual_financial_summary':
-        return data.map(item => [
-          `${item.first_name} ${item.last_name}`,
-          item.transactionCount.toString(),
-          `$${item.totalIncome.toLocaleString()}`,
-          `$${item.totalExpenses.toLocaleString()}`,
-          `$${item.netAmount.toLocaleString()}`
-        ]);
-      case 'nursing_home_annual_financial_summary':
-        return data.map(item => [
-          item.name,
-          item.transactionCount.toString(),
-          `$${item.totalIncome.toLocaleString()}`,
-          `$${item.totalExpenses.toLocaleString()}`,
-          `$${item.netAmount.toLocaleString()}`
         ]);
       case 'residents_income_per_nursing_home_monthly':
         const rows: any[][] = [];
@@ -179,35 +159,38 @@ export class ReportExporter {
         });
         return rows;
       case 'resident_income_expense_summary':
-        const expenseRows: any[][] = [];
+        const summaryRows: any[][] = [];
         data.forEach(item => {
           item.residentSummaries.forEach((resident: any) => {
+            // Income row
+            summaryRows.push([
+              item.nursingHomeName,
+              item.monthSort, // YYYY-MM
+              resident.residentName,
+              `$${resident.monthlyIncome.toLocaleString()}`,
+              '', // Expense Category blank for income row
+              '', // Expense Amount blank for income row
+              `$${resident.netAmount.toLocaleString()}`
+            ]);
+            // Expense rows
             if (resident.monthlyExpenses.length > 0) {
               resident.monthlyExpenses.forEach((expense: any) => {
-                expenseRows.push([
+                summaryRows.push([
                   item.nursingHomeName,
-                  item.month,
+                  item.monthSort, // YYYY-MM
                   resident.residentName,
-                  `$${resident.monthlyIncome.toLocaleString()}`,
+                  '', // Income blank for expense row
                   expense.category,
                   `$${expense.totalAmount.toLocaleString()}`,
                   `$${resident.netAmount.toLocaleString()}`
                 ]);
               });
             } else {
-              expenseRows.push([
-                item.nursingHomeName,
-                item.month,
-                resident.residentName,
-                `$${resident.monthlyIncome.toLocaleString()}`,
-                'No Expenses',
-                '$0',
-                `$${resident.netAmount.toLocaleString()}`
-              ]);
+              // If no expenses, still output a row for clarity (already handled by income row)
             }
           });
         });
-        return expenseRows;
+        return summaryRows;
       default:
         return [];
     }
@@ -218,20 +201,6 @@ export class ReportExporter {
       case 'transaction_report':
         return {
           3: { halign: 'right' },
-        };
-      case 'resident_annual_financial_summary':
-        return {
-          1: { halign: 'right' },
-          2: { halign: 'right' },
-          3: { halign: 'right' },
-          4: { halign: 'right' },
-        };
-      case 'nursing_home_annual_financial_summary':
-        return {
-          1: { halign: 'right' },
-          2: { halign: 'right' },
-          3: { halign: 'right' },
-          4: { halign: 'right' },
         };
       case 'residents_income_per_nursing_home_monthly':
         return {
@@ -279,22 +248,6 @@ export class ReportExporter {
           'Emergency Contact': item.emergency_contact_name,
           'Emergency Phone': item.emergency_contact_phone,
           'Emergency Relationship': item.emergency_contact_relationship
-        }));
-      case 'resident_annual_financial_summary':
-        return data.map(item => ({
-          'Resident Name': `${item.first_name} ${item.last_name}`,
-          'Transaction Count': item.transactionCount,
-          'Total Income': item.totalIncome,
-          'Total Expenses': item.totalExpenses,
-          'Net Amount': item.netAmount,
-        }));
-      case 'nursing_home_annual_financial_summary':
-        return data.map(item => ({
-          'Nursing Home': item.name,
-          'Transaction Count': item.transactionCount,
-          'Total Income': item.totalIncome,
-          'Total Expenses': item.totalExpenses,
-          'Net Amount': item.netAmount,
         }));
       case 'residents_income_per_nursing_home_monthly':
         const excelData: any[] = [];

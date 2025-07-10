@@ -36,14 +36,6 @@ export class ReportGenerator {
           data = await DataFetchers.getResidents(nursingHomeId);
           summary = SummaryCalculators.calculateResidentSummary(data);
           break;
-        case 'resident_annual_financial_summary':
-          data = await BasicReportGenerators.generateResidentAnnualFinancialSummary(dateRange);
-          summary = SummaryCalculators.calculateResidentAnnualFinancialSummary(data);
-          break;
-        case 'nursing_home_annual_financial_summary':
-          data = await BasicReportGenerators.generateNursingHomeAnnualFinancialSummary(dateRange);
-          summary = SummaryCalculators.calculateNursingHomeAnnualFinancialSummary(data);
-          break;
         case 'residents_income_per_nursing_home_monthly':
           data = await MonthlyIncomeReportGenerator.generateData(dateRange, configId);
           summary = SummaryCalculators.calculateResidentsIncomePerNursingHomeMonthly(data);

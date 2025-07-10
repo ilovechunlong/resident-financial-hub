@@ -5,4 +5,4 @@ ALTER TABLE public.report_configurations DROP CONSTRAINT IF EXISTS report_config
 -- Add a new CHECK constraint that includes the new report type.
 ALTER TABLE public.report_configurations
 ADD CONSTRAINT report_configurations_report_type_check
-CHECK (report_type IN ('transaction_report', 'resident_report', 'resident_annual_financial_summary'));
+CHECK (report_type IN ('transaction_report', 'resident_report'));
