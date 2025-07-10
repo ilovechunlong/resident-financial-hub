@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { FinancialTransaction, FinancialTransactionFormData } from '@/types/financial';
@@ -127,11 +126,27 @@ export const useUpdateFinancialTransaction = () => {
 
   return useMutation({
     mutationFn: async ({ id, ...transactionData }: FinancialTransactionFormData & { id: string }): Promise<FinancialTransaction> => {
-      console.log('Updating financial transaction:', { id, ...transactionData });
+      console.log('Updating financial transaction with ID:', id, 'Data:', transactionData);
       
+      // Clean the data to ensure we only send valid fields
+      const updateData = {
+        transaction_type: transactionData.transaction_type,
+        category: transactionData.category,
+        amount: transactionData.amount,
+        description: transactionData.description || null,
+        transaction_date: transactionData.transaction_date,
+        payment_method: transactionData.payment_method || null,
+        reference_number: transactionData.reference_number || null,
+        nursing_home_id: transactionData.nursing_home_id || null,
+        resident_id: transactionData.resident_id || null,
+        status: transactionData.status,
+        is_recurring: transactionData.is_recurring || false,
+        recurring_frequency: transactionData.recurring_frequency || null,
+      };
+
       const { data, error } = await supabase
         .from('financial_transactions')
-        .update(transactionData)
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
@@ -141,7 +156,7 @@ export const useUpdateFinancialTransaction = () => {
         throw error;
       }
 
-      console.log('Financial transaction updated:', data);
+      console.log('Financial transaction updated successfully:', data);
       // Cast the data to match our TypeScript interface
       return {
         ...data,
