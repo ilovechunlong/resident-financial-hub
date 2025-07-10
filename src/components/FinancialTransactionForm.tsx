@@ -68,6 +68,13 @@ export function FinancialTransactionForm({ onSuccess, initialData }: FinancialTr
 
   const transactionScope = watchResidentId ? 'resident' : 'nursing_home';
 
+  // Debug form state
+  useEffect(() => {
+    console.log('Form errors:', form.formState.errors);
+    console.log('Form is valid:', form.formState.isValid);
+    console.log('Form is submitting:', form.formState.isSubmitting);
+  }, [form.formState.errors, form.formState.isValid, form.formState.isSubmitting]);
+
   useEffect(() => {
     const selectedResident = residents.find(r => r.id === watchResidentId);
     if (watchResidentId && selectedResident) {
@@ -84,6 +91,7 @@ export function FinancialTransactionForm({ onSuccess, initialData }: FinancialTr
   }, [watchNursingHomeId, watchResidentId, watchTransactionType, form]);
 
   const onSubmit = async (values: FinancialTransactionFormValues) => {
+    console.log('=== FORM SUBMISSION STARTED ===');
     console.log('Form submitted with values:', values);
     console.log('Is editing:', isEditing);
     console.log('Initial data ID:', initialData?.id);
@@ -127,6 +135,33 @@ export function FinancialTransactionForm({ onSuccess, initialData }: FinancialTr
     }
   };
 
+  const handleFormSubmit = (e: React.FormEvent) => {
+    console.log('=== FORM SUBMIT EVENT TRIGGERED ===');
+    console.log('Form state before submission:', {
+      isValid: form.formState.isValid,
+      errors: form.formState.errors,
+      isSubmitting: form.formState.isSubmitting
+    });
+    
+    // Let react-hook-form handle the submission
+    form.handleSubmit(onSubmit)(e);
+  };
+
+  const handleButtonClick = () => {
+    console.log('=== UPDATE BUTTON CLICKED ===');
+    console.log('Button clicked, checking form state...');
+    console.log('Form errors:', form.formState.errors);
+    console.log('Is form valid:', form.formState.isValid);
+    
+    // Trigger form validation
+    form.trigger().then((isValid) => {
+      console.log('Form validation result:', isValid);
+      if (!isValid) {
+        console.log('Form is invalid, showing errors:', form.formState.errors);
+      }
+    });
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -137,7 +172,7 @@ export function FinancialTransactionForm({ onSuccess, initialData }: FinancialTr
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={handleFormSubmit} className="space-y-6">
             
             <BasicTransactionFields 
               form={form} 
@@ -207,6 +242,7 @@ export function FinancialTransactionForm({ onSuccess, initialData }: FinancialTr
               type="submit" 
               className="w-full" 
               disabled={addTransaction.isPending || updateTransaction.isPending}
+              onClick={handleButtonClick}
             >
               {addTransaction.isPending || updateTransaction.isPending 
                 ? (isEditing ? 'Updating Transaction...' : 'Adding Transaction...') 
