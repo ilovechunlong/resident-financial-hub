@@ -2,7 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { DateRange } from './types';
 
 export class DataFetchers {
-  static async getFinancialTransactions(dateRange?: DateRange) {
+  static async getFinancialTransactions(dateRange?: DateRange, nursingHomeId?: string) {
     let query = supabase
       .from('financial_transactions')
       .select(`*, residents:resident_id (first_name, last_name, nursing_home_id, nursing_homes (name)), nursing_homes:nursing_home_id (name)`)
@@ -13,6 +13,9 @@ export class DataFetchers {
     }
     if (dateRange?.end) {
       query = query.lte('transaction_date', dateRange.end);
+    }
+    if (nursingHomeId) {
+      query = query.eq('nursing_home_id', nursingHomeId);
     }
 
     const { data, error } = await query;

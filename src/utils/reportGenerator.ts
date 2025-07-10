@@ -29,7 +29,7 @@ export class ReportGenerator {
       
       switch (reportType) {
         case 'transaction_report':
-          data = await DataFetchers.getFinancialTransactions(dateRange);
+          data = await DataFetchers.getFinancialTransactions(dateRange, nursingHomeId);
           summary = SummaryCalculators.calculateFinancialSummary(data);
           break;
         case 'resident_report':
