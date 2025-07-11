@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { ResidentDetailsCard } from './ResidentDetailsCard';
 import { MonthlyIncomeReportItem, IncomeExpenseSummaryReportItem } from '@/types/reportTypes';
+import { NursingHomeExpenseReportItem } from '@/utils/reports/nursingHomeExpenseReport';
 
 interface ReportPreviewProps {
   report: any;
@@ -115,6 +116,62 @@ export function ReportPreview({
                     />
                   );
                 })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (reportType === 'nursing_home_expense_report') {
+    return (
+      <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+        <h4 className="font-semibold mb-3">Nursing Home Expense Report Preview</h4>
+        <div className="space-y-4 max-h-96 overflow-y-auto">
+          {reportData.data?.map((item: NursingHomeExpenseReportItem, index: number) => (
+            <div key={`${item.nursingHomeId}-${item.monthSort}`} className="border rounded-lg p-3 bg-white">
+              <div className="flex justify-between items-center mb-2">
+                <h5 className="font-semibold text-lg">{item.nursingHomeName}</h5>
+                <Badge variant="outline">{item.month}</Badge>
+              </div>
+              
+              <div className="mb-3 p-2 bg-red-50 rounded">
+                <div className="flex justify-between text-sm">
+                  <span className="font-medium">Total Expenses:</span>
+                  <span className="font-semibold text-red-600">${item.totalExpenses.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-sm text-gray-600">
+                  <span>Transactions:</span>
+                  <span>{item.totalTransactions}</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <h6 className="font-medium text-sm text-gray-700 mb-2">Expense Breakdown by Category:</h6>
+                {item.expenseBreakdown?.map((category, categoryIndex) => (
+                  <div key={`${category.category}-${item.monthSort}`} className="border border-gray-200 rounded p-2 bg-gray-50">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-medium text-sm">{category.category}</span>
+                      <div className="text-right">
+                        <div className="font-semibold text-red-600">${category.totalAmount.toLocaleString()}</div>
+                        <div className="text-xs text-gray-500">{category.transactionCount} transaction{category.transactionCount !== 1 ? 's' : ''}</div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      {category.transactions.map((transaction) => (
+                        <div key={transaction.id} className="flex justify-between text-xs text-gray-600 pl-2 border-l-2 border-gray-300">
+                          <div>
+                            <span>{format(new Date(transaction.date), 'MMM dd')}</span>
+                            {transaction.description && <span className="ml-2">- {transaction.description}</span>}
+                          </div>
+                          <span className="font-medium">${transaction.amount.toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           ))}
