@@ -99,6 +99,8 @@ export class ReportExporter {
         return ['Nursing Home', 'Month', 'Resident', 'Transaction Date', 'Amount', 'Category', 'Status', 'Issues'];
       case 'resident_income_expense_summary':
         return ['Nursing Home', 'Month', 'Resident', 'Income', 'Expense Category', 'Expense Amount', 'Net Amount'];
+      case 'nursing_home_expense_report':
+        return ['Nursing Home', 'Month', 'Category', 'Transaction Date', 'Amount', 'Description', 'Payment Method', 'Status'];
       default:
         return [];
     }
@@ -191,6 +193,25 @@ export class ReportExporter {
           });
         });
         return summaryRows;
+      case 'nursing_home_expense_report':
+        const expenseRows: any[][] = [];
+        data.forEach(item => {
+          item.expenseBreakdown.forEach((category: any) => {
+            category.transactions.forEach((transaction: any) => {
+              expenseRows.push([
+                item.nursingHomeName,
+                item.month,
+                category.category,
+                format(new Date(transaction.date), 'MMM dd, yyyy'),
+                `$${transaction.amount.toLocaleString()}`,
+                transaction.description || '-',
+                transaction.paymentMethod || '-',
+                transaction.status
+              ]);
+            });
+          });
+        });
+        return expenseRows;
       default:
         return [];
     }
@@ -211,6 +232,10 @@ export class ReportExporter {
           3: { halign: 'right' },
           5: { halign: 'right' },
           6: { halign: 'right' },
+        };
+      case 'nursing_home_expense_report':
+        return {
+          4: { halign: 'right' }, // Amount column
         };
       default:
         return {};
@@ -325,6 +350,26 @@ export class ReportExporter {
           });
         });
         return expenseExcelData;
+      case 'nursing_home_expense_report':
+        const nursingHomeExpenseData: any[] = [];
+        data.forEach(item => {
+          item.expenseBreakdown.forEach((category: any) => {
+            category.transactions.forEach((transaction: any) => {
+              nursingHomeExpenseData.push({
+                'Nursing Home': item.nursingHomeName,
+                'Month': item.month,
+                'Category': category.category,
+                'Transaction Date': format(new Date(transaction.date), 'MMM dd, yyyy'),
+                'Amount': transaction.amount,
+                'Description': transaction.description || '',
+                'Payment Method': transaction.paymentMethod || '',
+                'Reference Number': transaction.referenceNumber || '',
+                'Status': transaction.status
+              });
+            });
+          });
+        });
+        return nursingHomeExpenseData;
       default:
         return data;
     }
