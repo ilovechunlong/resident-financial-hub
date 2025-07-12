@@ -142,6 +142,7 @@ export class DataFetchers {
 
     const { data, error } = await query;
     if (error) throw error;
-    return data || [];
+    // Only include transactions where resident_id is null or empty string
+    return (data || []).filter((tx: any) => tx.resident_id === null || tx.resident_id === '');
   }
 }

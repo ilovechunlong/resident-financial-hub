@@ -317,39 +317,36 @@ export class ReportExporter {
         });
         return excelData;
       case 'resident_income_expense_summary':
-        const expenseExcelData: any[] = [];
+        const summaryExcelRows: any[] = [];
         data.forEach(item => {
           item.residentSummaries.forEach((resident: any) => {
+            // Income row
+            summaryExcelRows.push({
+              'Nursing Home': item.nursingHomeName,
+              'Month': item.monthSort, // YYYY-MM
+              'Resident': resident.residentName,
+              'Income': resident.monthlyIncome,
+              'Expense Category': '',
+              'Expense Amount': '',
+              'Net Amount': resident.netAmount
+            });
+            // Expense rows
             if (resident.monthlyExpenses.length > 0) {
               resident.monthlyExpenses.forEach((expense: any) => {
-                expenseExcelData.push({
+                summaryExcelRows.push({
                   'Nursing Home': item.nursingHomeName,
-                  'Month': item.month,
-                  'Resident Name': resident.residentName,
-                  'Monthly Income': resident.monthlyIncome,
+                  'Month': item.monthSort, // YYYY-MM
+                  'Resident': resident.residentName,
+                  'Income': '',
                   'Expense Category': expense.category,
                   'Expense Amount': expense.totalAmount,
-                  'Transaction Count': expense.transactionCount,
-                  'Total Expenses': resident.totalExpenses,
                   'Net Amount': resident.netAmount
                 });
-              });
-            } else {
-              expenseExcelData.push({
-                'Nursing Home': item.nursingHomeName,
-                'Month': item.month,
-                'Resident Name': resident.residentName,
-                'Monthly Income': resident.monthlyIncome,
-                'Expense Category': 'No Expenses',
-                'Expense Amount': 0,
-                'Transaction Count': 0,
-                'Total Expenses': resident.totalExpenses,
-                'Net Amount': resident.netAmount
               });
             }
           });
         });
-        return expenseExcelData;
+        return summaryExcelRows;
       case 'nursing_home_expense_report':
         const nursingHomeExpenseData: any[] = [];
         data.forEach(item => {

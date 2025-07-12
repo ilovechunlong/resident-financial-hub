@@ -238,7 +238,7 @@ export function FinancialTransactionForm({ onSuccess, initialData }: FinancialTr
               />
             </div>
 
-            <RecurringTransactionFields form={form} watchIsRecurring={watchIsRecurring} />
+            {/* <RecurringTransactionFields form={form} watchIsRecurring={watchIsRecurring} /> */}
 
             <AdditionalDetailsFields form={form} />
 
