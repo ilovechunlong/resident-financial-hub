@@ -62,6 +62,7 @@ export function ReportsList() {
       'resident_report': 'Resident Report',
       'residents_income_per_nursing_home_monthly': 'Residents Income per Nursing Home Monthly',
       'resident_income_expense_summary': 'Resident Income Expense Summary Report',
+      'nursing_home_expense_report': 'Nursing Home Expense Report',
     };
     return labels[type as keyof typeof labels] || type;
   };

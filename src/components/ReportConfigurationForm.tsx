@@ -144,7 +144,7 @@ export function ReportConfigurationForm({ onSuccess }: ReportConfigurationFormPr
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Report Type</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select report type" />
