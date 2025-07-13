@@ -65,7 +65,6 @@ export class SummaryCalculators {
 
   static calculateResidentsIncomePerNursingHomeMonthly(data: any[]) {
     const totalNursingHomes = new Set(data.map(d => d.nursingHomeId)).size;
-    const totalRecords = data.length;
     const totalIncome = data.reduce((sum, d) => sum + d.totalIncome, 0);
     const totalTransactions = data.reduce((sum, d) => sum + d.totalTransactions, 0);
     
@@ -83,19 +82,15 @@ export class SummaryCalculators {
     return {
       totalNursingHomes,
       totalResidents: allResidents.size,
-      totalRecords,
       totalIncome,
       totalTransactions,
       residentsWithIssues: residentsWithIssues.size,
-      averageIncomePerRecord: totalRecords > 0 ? totalIncome / totalRecords : 0,
-      averageTransactionsPerRecord: totalRecords > 0 ? totalTransactions / totalRecords : 0,
       generatedAt: new Date().toISOString()
     };
   }
 
   static calculateResidentIncomeExpenseSummary(data: any[]) {
     const totalNursingHomes = new Set(data.map(d => d.nursingHomeId)).size;
-    const totalRecords = data.length;
     const totalIncome = data.reduce((sum, d) => sum + d.totalIncome, 0);
     const totalExpenses = data.reduce((sum, d) => sum + d.totalExpenses, 0);
     const netAmount = totalIncome - totalExpenses;
@@ -110,48 +105,31 @@ export class SummaryCalculators {
     return {
       totalNursingHomes,
       totalResidents: allResidents.size,
-      totalRecords,
       totalIncome,
       totalExpenses,
       netAmount,
-      averageIncomePerRecord: totalRecords > 0 ? totalIncome / totalRecords : 0,
-      averageExpensePerRecord: totalRecords > 0 ? totalExpenses / totalRecords : 0,
       generatedAt: new Date().toISOString()
     };
   }
 
   static calculateNursingHomeExpenseSummary(data: any[]) {
     const totalNursingHomes = new Set(data.map(d => d.nursingHomeId)).size;
-    const totalRecords = data.length;
     const totalExpenses = data.reduce((sum, d) => sum + d.totalExpenses, 0);
     const totalTransactions = data.reduce((sum, d) => sum + d.totalTransactions, 0);
     
     // Get all unique categories
     const allCategories = new Set();
-    const categoryTotals = new Map();
     data.forEach(d => {
       d.expenseBreakdown.forEach((breakdown: any) => {
         allCategories.add(breakdown.category);
-        const currentTotal = categoryTotals.get(breakdown.category) || 0;
-        categoryTotals.set(breakdown.category, currentTotal + breakdown.totalAmount);
       });
     });
 
-    // Get top spending categories
-    const topCategories = Array.from(categoryTotals.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([category, amount]) => ({ category, amount }));
-
     return {
       totalNursingHomes,
-      totalRecords,
       totalExpenses,
       totalTransactions,
       totalCategories: allCategories.size,
-      topCategories,
-      averageExpensePerRecord: totalRecords > 0 ? totalExpenses / totalRecords : 0,
-      averageTransactionsPerRecord: totalRecords > 0 ? totalTransactions / totalRecords : 0,
       generatedAt: new Date().toISOString()
     };
   }

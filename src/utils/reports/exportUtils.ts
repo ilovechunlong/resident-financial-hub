@@ -98,7 +98,7 @@ export class ReportExporter {
       case 'residents_income_per_nursing_home_monthly':
         return ['Nursing Home', 'Month', 'Resident', 'Transaction Date', 'Amount', 'Category', 'Status', 'Issues'];
       case 'resident_income_expense_summary':
-        return ['Nursing Home', 'Month', 'Resident', 'Income', 'Expense Category', 'Expense Amount', 'Net Amount'];
+        return ['Nursing Home', 'Month', 'Resident', 'Income', 'Expense Category', 'Expense Amount'];
       case 'nursing_home_expense_report':
         return ['Nursing Home', 'Month', 'Category', 'Transaction Date', 'Amount', 'Description', 'Payment Method', 'Status'];
       default:
@@ -171,8 +171,7 @@ export class ReportExporter {
               resident.residentName,
               `$${resident.monthlyIncome.toLocaleString()}`,
               '', // Expense Category blank for income row
-              '', // Expense Amount blank for income row
-              `$${resident.netAmount.toLocaleString()}`
+              '' // Expense Amount blank for income row
             ]);
             // Expense rows
             if (resident.monthlyExpenses.length > 0) {
@@ -183,8 +182,7 @@ export class ReportExporter {
                   resident.residentName,
                   '', // Income blank for expense row
                   expense.category,
-                  `$${expense.totalAmount.toLocaleString()}`,
-                  `$${resident.netAmount.toLocaleString()}`
+                  `$${expense.totalAmount.toLocaleString()}`
                 ]);
               });
             } else {
@@ -231,7 +229,6 @@ export class ReportExporter {
         return {
           3: { halign: 'right' },
           5: { halign: 'right' },
-          6: { halign: 'right' },
         };
       case 'nursing_home_expense_report':
         return {
@@ -327,8 +324,7 @@ export class ReportExporter {
               'Resident': resident.residentName,
               'Income': resident.monthlyIncome,
               'Expense Category': '',
-              'Expense Amount': '',
-              'Net Amount': resident.netAmount
+              'Expense Amount': ''
             });
             // Expense rows
             if (resident.monthlyExpenses.length > 0) {
@@ -339,8 +335,7 @@ export class ReportExporter {
                   'Resident': resident.residentName,
                   'Income': '',
                   'Expense Category': expense.category,
-                  'Expense Amount': expense.totalAmount,
-                  'Net Amount': resident.netAmount
+                  'Expense Amount': expense.totalAmount
                 });
               });
             }
